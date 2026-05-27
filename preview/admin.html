@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin · Arke Keep</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <p class="brand">Arke Keep</p>
+        <h1>Admin</h1>
+        <nav class="nav">
+          <a class="active" href="./admin.html">Dashboard</a>
+          <a href="./admin.html#clientes">Clientes</a>
+          <a href="./admin.html#nova-entrega">Registrar entrega</a>
+          <a href="./admin.html#planos">Planos e serviços</a>
+          <a href="./time.html">Ver Kanban do time</a>
+          <a href="./index.html">Trocar ambiente</a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Visão geral</p>
+            <h2>Operação de créditos</h2>
+          </div>
+          <button class="primary-btn">+ Novo cliente</button>
+        </header>
+
+        <section class="grid metrics">
+          <article class="card pad"><p class="muted">MRR total</p><p class="metric-value">R$ 19.000</p></article>
+          <article class="card pad"><p class="muted">Clientes ativos</p><p class="metric-value">4</p></article>
+          <article class="card pad"><p class="muted">Créditos consumidos</p><p class="metric-value">684</p></article>
+          <article class="card pad"><p class="muted">Em andamento</p><p class="metric-value">12</p></article>
+        </section>
+
+        <section class="grid two" style="margin-top: 18px;">
+          <article id="clientes" class="card">
+            <div class="pad">
+              <h3>Clientes e saldos</h3>
+              <p class="muted">Alertas aparecem quando o cliente passa de 80% de uso.</p>
+            </div>
+            <div class="row">
+              <div>
+                <strong>Nord Casa</strong>
+                <p class="muted">Keep Scale · 318 de 550 usados</p>
+                <div class="bar"><div class="fill" style="width:58%"></div></div>
+              </div>
+              <span class="badge blue">232 cr</span>
+              <button class="ghost-btn">Abrir</button>
+            </div>
+            <div class="row">
+              <div>
+                <strong>Vista Foods</strong>
+                <p class="muted">Keep Essential · 214 de 250 usados</p>
+                <div class="bar"><div class="fill" style="width:86%"></div></div>
+              </div>
+              <span class="badge warn">36 cr</span>
+              <button class="ghost-btn">Abrir</button>
+            </div>
+            <div class="row">
+              <div>
+                <strong>Orbit B2B</strong>
+                <p class="muted">Keep Boost · 152 de 1000 usados</p>
+                <div class="bar"><div class="fill" style="width:15%"></div></div>
+              </div>
+              <span class="badge green">848 cr</span>
+              <button class="ghost-btn">Abrir</button>
+            </div>
+          </article>
+
+          <article id="nova-entrega" class="card pad">
+            <h3>Registrar entrega</h3>
+            <p class="muted" style="margin-top: 6px;">A tarefa entra no Kanban e debita créditos do ciclo ativo.</p>
+            <form class="form" style="margin-top: 16px;">
+              <label class="field">
+                <span>Cliente</span>
+                <select>
+                  <option>Nord Casa · 232 cr restantes</option>
+                  <option>Vista Foods · 36 cr restantes</option>
+                  <option>Orbit B2B · 848 cr restantes</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Tipo de serviço</span>
+                <select id="servico">
+                  <option data-credits="8">Criativo simples · 8 cr</option>
+                  <option data-credits="12">Carrossel até 10 pg · 12 cr</option>
+                  <option data-credits="25" selected>Vídeo até 1min · 25 cr</option>
+                  <option data-credits="50">Motion até 30s · 50 cr</option>
+                  <option data-credits="110">Motion branding até 30s · 110 cr</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Nome da entrega</span>
+                <input value="Vídeo campanha institucional" />
+              </label>
+              <label class="field">
+                <span>Responsável</span>
+                <select>
+                  <option>Nicolas</option>
+                  <option>Ana Júlia</option>
+                  <option>Lea</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Observações</span>
+                <textarea>Adaptar roteiro aprovado e publicar link final no Drive.</textarea>
+              </label>
+              <div class="preview-box">
+                <strong>Preview</strong>
+                <p class="muted" style="margin-top: 6px;">Consome 25 créditos · saldo após: 207 créditos · status inicial: pendente.</p>
+              </div>
+              <button class="primary-btn" type="button">Confirmar e enviar para Kanban</button>
+            </form>
+          </article>
+        </section>
+
+        <section id="planos" class="grid two" style="margin-top: 18px;">
+          <article class="card">
+            <div class="pad"><h3>Planos base</h3></div>
+            <div class="row"><div><strong>Keep Essential</strong><p class="muted">250 créditos/mês</p></div><strong>R$ 3.000</strong><button class="ghost-btn">Editar</button></div>
+            <div class="row"><div><strong>Keep Scale</strong><p class="muted">550 créditos/mês</p></div><strong>R$ 6.000</strong><button class="ghost-btn">Editar</button></div>
+            <div class="row"><div><strong>Keep Boost</strong><p class="muted">1000 créditos/mês</p></div><strong>R$ 10.000</strong><button class="ghost-btn">Editar</button></div>
+          </article>
+          <article class="card">
+            <div class="pad"><h3>Serviços mais usados</h3></div>
+            <div class="row"><div><strong>Criativo simples</strong><p class="muted">estático</p></div><strong>8 cr</strong><button class="ghost-btn">Editar</button></div>
+            <div class="row"><div><strong>Vídeo até 1min</strong><p class="muted">vídeo</p></div><strong>25 cr</strong><button class="ghost-btn">Editar</button></div>
+            <div class="row"><div><strong>Motion branding até 30s</strong><p class="muted">motion</p></div><strong>110 cr</strong><button class="ghost-btn">Editar</button></div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

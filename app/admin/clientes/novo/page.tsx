@@ -53,7 +53,7 @@ export default function NovoClientePage() {
 
       if (planoData) {
         // Criar contrato
-        const { error: contratoError } = await supabase
+        const { data: contratoData, error: contratoError } = await supabase
           .from('contratos')
           .insert([
             {
@@ -67,6 +67,8 @@ export default function NovoClientePage() {
               ativo: true,
             },
           ])
+          .select('id')
+          .single()
 
         if (contratoError) throw contratoError
 
@@ -77,10 +79,10 @@ export default function NovoClientePage() {
           .insert([
             {
               cliente_id: clienteData.id,
-              contrato_id: clienteData.id,
+              contrato_id: contratoData.id,
               mes: hoje.getMonth() + 1,
               ano: hoje.getFullYear(),
-              creditos_disponveis: planoData.creditos_mensais,
+              creditos_disponiveis: planoData.creditos_mensais,
               creditos_usados: 0,
               status: 'ativo',
             },

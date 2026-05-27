@@ -1,18 +1,16 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import type { Role } from '@/lib/types'
 
-const roleHome: Record<Role, string> = {
-  admin: '/admin/dashboard',
-  cliente: '/cliente/meu-painel',
-  time: '/time/tarefas',
+function isProtectedPath(pathname: string) {
+  return pathname.startsWith('/admin') || pathname.startsWith('/cliente') || pathname.startsWith('/time')
 }
 
-function expectedRole(pathname: string): Role | null {
-  if (pathname.startsWith('/admin')) return 'admin'
-  if (pathname.startsWith('/cliente')) return 'cliente'
-  if (pathname.startsWith('/time')) return 'time'
-  return null
+function redirectWithCookies(url: URL, response: NextResponse) {
+  const redirectResponse = NextResponse.redirect(url)
+  response.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie)
+  })
+  return redirectResponse
 }
 
 export async function updateSession(request: NextRequest) {
@@ -38,42 +36,29 @@ export async function updateSession(request: NextRequest) {
   )
 
   const { pathname } = request.nextUrl
-  const protectedRole = expectedRole(pathname)
   const isLogin = pathname === '/login' || pathname === '/auth/login'
+  const protectedPath = isProtectedPath(pathname)
 
-  if (!protectedRole && !isLogin) return response
+  if (!protectedPath && !isLogin) return response
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user && protectedRole) {
+  if (!user && protectedPath) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = '/auth/login'
     url.searchParams.set('next', pathname)
-    return NextResponse.redirect(url)
+    return redirectWithCookies(url, response)
   }
 
   if (!user) return response
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  const role = profile?.role as Role | undefined
-
-  if (isLogin && role) {
+  if (isLogin) {
     const url = request.nextUrl.clone()
-    url.pathname = roleHome[role]
-    return NextResponse.redirect(url)
-  }
-
-  if (protectedRole && role !== protectedRole) {
-    const url = request.nextUrl.clone()
-    url.pathname = role ? roleHome[role] : '/login'
-    return NextResponse.redirect(url)
+    url.pathname = request.nextUrl.searchParams.get('next') || '/admin/dashboard'
+    url.search = ''
+    return redirectWithCookies(url, response)
   }
 
   return response

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Time · Arke Keep</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <p class="brand">Arke Keep</p>
+        <h1>Time</h1>
+        <nav class="nav">
+          <a class="active" href="./time.html">Meu Kanban</a>
+          <a href="./admin.html#nova-entrega">Nova tarefa</a>
+          <a href="./cliente.html">Exemplo cliente</a>
+          <a href="./index.html">Trocar ambiente</a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Nicolas</p>
+            <h2>Tarefas atribuídas</h2>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="ghost-btn">Filtrar cliente</button>
+            <button class="ghost-btn">Filtrar serviço</button>
+          </div>
+        </header>
+
+        <section class="kanban">
+          <div class="column">
+            <div class="column-head"><h3>Pendente</h3><span class="badge gray">3</span></div>
+            <article class="task-card">
+              <div><strong>Motion branding teaser</strong><p class="muted">Orbit B2B · criado em 18/05</p></div>
+              <div class="task-meta"><span class="badge warn">110 cr</span><span class="badge gray">motion</span></div>
+              <p class="muted">Criar abertura animada com marca e CTA final.</p>
+              <button class="primary-btn">Mover para andamento</button>
+            </article>
+            <article class="task-card">
+              <div><strong>Carrossel produto</strong><p class="muted">Vista Foods · criado em 20/05</p></div>
+              <div class="task-meta"><span class="badge warn">12 cr</span><span class="badge gray">estático</span></div>
+              <button class="primary-btn">Mover para andamento</button>
+            </article>
+          </div>
+
+          <div class="column">
+            <div class="column-head"><h3>Em andamento</h3><span class="badge blue">2</span></div>
+            <article class="task-card">
+              <div><strong>Vídeo campanha institucional</strong><p class="muted">Nord Casa · criado em 19/05</p></div>
+              <div class="task-meta"><span class="badge blue">25 cr</span><span class="badge gray">vídeo</span></div>
+              <p class="muted">Roteiro aprovado. Falta finalizar lettering e exportar versão vertical.</p>
+              <label class="field"><span>Link da entrega</span><input placeholder="https://drive.google.com/..." /></label>
+              <button class="primary-btn">Marcar como entregue</button>
+            </article>
+          </div>
+
+          <div class="column">
+            <div class="column-head"><h3>Entregue</h3><span class="badge green">2</span></div>
+            <article class="task-card">
+              <div><strong>Criativo WhatsApp</strong><p class="muted">Nord Casa · entregue hoje</p></div>
+              <div class="task-meta"><span class="badge green">8 cr</span><span class="badge gray">estático</span></div>
+              <a class="ghost-btn" href="#">Abrir link</a>
+            </article>
+          </div>
+
+          <div class="column">
+            <div class="column-head"><h3>Aprovado</h3><span class="badge darkgreen">4</span></div>
+            <article class="task-card">
+              <div><strong>Revisão landing page</strong><p class="muted">Vista Foods · aprovado em 18/05</p></div>
+              <div class="task-meta"><span class="badge darkgreen">10 cr</span><span class="badge gray">revisão</span></div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Arke Gestão Criativa",
+  "description": "Sistema de gestão de tarefas e créditos do estúdio Arke, com isolamento para Admin, Time e Clientes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

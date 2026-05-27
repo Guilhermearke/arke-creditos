@@ -1,134 +1,98 @@
-'use client'
+import Link from 'next/link'
+import { AlertTriangle, Banknote, ClipboardList, Users } from 'lucide-react'
+import { Card, Currency, Progress, Shell } from '@/components/ui'
+import { getAdminDashboardData } from '@/lib/app-data'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase'
-import { LogOut } from 'lucide-react'
+const nav = [
+  { href: '/admin/dashboard', label: 'Dashboard' },
+  { href: '/admin/clientes', label: 'Clientes' },
+  { href: '/admin/clientes/novo', label: 'Novo cliente' },
+  { href: '/admin/entregas', label: 'Entregas' },
+  { href: '/admin/demandas/nova', label: 'Nova demanda' },
+  { href: '/admin/time', label: 'Time' },
+]
 
-export default function AdminDashboard() {
-  const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({
-    clientesAtivos: 0,
-    mrr: 0,
-    creditosConsumidos: 0,
-    entregasEmAndamento: 0,
-  })
-  const router = useRouter()
-  const supabase = createClient()
-
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        // Contar clientes ativos
-        const { count: clientesAtivos } = await supabase
-          .from('clientes')
-          .select('*', { count: 'exact', head: true })
-          .eq('ativo', true)
-
-        // Calcular MRR
-        const { data: contratos } = await supabase
-          .from('contratos')
-          .select('valor_mensal')
-          .eq('ativo', true)
-
-        const mrr = contratos?.reduce((acc, c) => acc + (c.valor_mensal || 0), 0) || 0
-
-        // Créditos consumidos este mês
-        const { data: ciclosAtivos } = await supabase
-          .from('ciclos')
-          .select('creditos_usados')
-          .eq('status', 'ativo')
-
-        const creditosConsumidos = ciclosAtivos?.reduce((acc, c) => acc + (c.creditos_usados || 0), 0) || 0
-
-        // Entregas em andamento
-        const { count: entregasEmAndamento } = await supabase
-          .from('entregas')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'em_andamento')
-
-        setStats({
-          clientesAtivos: clientesAtivos || 0,
-          mrr,
-          creditosConsumidos,
-          entregasEmAndamento: entregasEmAndamento || 0,
-        })
-      } catch (error) {
-        console.error('Erro ao carregar stats:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadStats()
-  }, [])
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/auth/login')
-  }
+export default async function DashboardPage() {
+  const { clientes, ciclos, entregas, contratos } = await getAdminDashboardData()
+  const mrr = contratos.reduce((sum, contrato) => sum + Number(contrato.valor_mensal ?? 0), 0)
+  const consumed = ciclos.reduce((sum, ciclo) => sum + Number(ciclo.creditos_usados ?? 0), 0)
+  const activeDeliveries = entregas.filter((entrega) => ['pendente', 'em_andamento'].includes(entrega.status))
 
   return (
-    <div className="min-h-screen bg-[#F8F8F6]">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[#1A1A1A]">Arke - Painel Admin</h1>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-gray-600 hover:text-[#1A1A1A] transition"
-          >
-            <LogOut size={20} />
-            Sair
-          </button>
-        </div>
-      </header>
+    <Shell area="Admin" title="Operação de créditos" nav={nav}>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Metric icon={<Banknote />} label="MRR total" value={<Currency value={mrr} />} />
+        <Metric icon={<Users />} label="Clientes ativos" value={clientes.length} />
+        <Metric icon={<ClipboardList />} label="Créditos consumidos" value={consumed} />
+        <Metric icon={<AlertTriangle />} label="Entregas abertas" value={activeDeliveries.length} />
+      </section>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Carregando dados...</p>
+      <section className="mt-6 grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
+        <Card>
+          <div className="flex items-center justify-between gap-3 border-b border-[#E7E1D7] p-5">
+            <div>
+              <h3 className="text-lg font-semibold tracking-[-0.03em]">Clientes e saldos</h3>
+              <p className="text-sm text-[#6F6D66]">Alertas quando o saldo fica abaixo de 20%.</p>
+            </div>
+            <Link className="rounded-lg bg-[#1A1A1A] px-4 py-2 text-sm font-bold text-white" href="/admin/clientes/novo">
+              Novo cliente
+            </Link>
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <p className="text-gray-600 text-sm font-medium mb-2">Clientes Ativos</p>
-                <p className="text-3xl font-bold text-[#1A1A1A]">{stats.clientesAtivos}</p>
-              </div>
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <p className="text-gray-600 text-sm font-medium mb-2">MRR</p>
-                <p className="text-3xl font-bold text-[#1A1A1A]">R${(stats.mrr / 100).toFixed(0)}</p>
-              </div>
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <p className="text-gray-600 text-sm font-medium mb-2">Créditos Consumidos (Mês)</p>
-                <p className="text-3xl font-bold text-[#1A1A1A]">{stats.creditosConsumidos}</p>
-              </div>
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <p className="text-gray-600 text-sm font-medium mb-2">Entregas em Andamento</p>
-                <p className="text-3xl font-bold text-[#1A1A1A]">{stats.entregasEmAndamento}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { title: 'Clientes', href: '/admin/clientes', desc: 'Gerenciar clientes e contratos' },
-                { title: 'Serviços', href: '/admin/servicos', desc: 'Biblioteca de serviços' },
-                { title: 'Entregas', href: '/admin/entregas', desc: 'Registrar entregas' },
-                { title: 'Time', href: '/admin/time', desc: 'Membros do time' },
-              ].map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="bg-white rounded-lg p-6 border border-gray-200 hover:shadow-md transition"
+          <div>
+            {clientes.map((cliente) => {
+              const ciclo = ciclos.find((item) => item.cliente_id === cliente.id)
+              const total = Number(ciclo?.creditos_disponiveis ?? 0)
+              const used = Number(ciclo?.creditos_usados ?? 0)
+              const remaining = Number(ciclo?.creditos_restantes ?? total)
+              const low = total > 0 && remaining / total < 0.2
+              return (
+                <Link
+                  key={cliente.id}
+                  href={`/admin/clientes/${cliente.id}`}
+                  className="grid gap-4 border-b border-[#E7E1D7] p-5 transition hover:bg-[#F8F8F6] md:grid-cols-[1fr_160px_auto] md:items-center"
                 >
-                  <h2 className="text-xl font-bold text-[#1A1A1A] mb-2">{item.title}</h2>
-                  <p className="text-gray-600 text-sm">{item.desc}</p>
-                </a>
-              ))}
-            </div>
-          </>
-        )}
-      </main>
-    </div>
+                  <div>
+                    <p className="font-semibold">{cliente.nome}</p>
+                    <p className="text-sm text-[#6F6D66]">{cliente.empresa || cliente.email || 'Sem empresa'}</p>
+                    <div className="mt-3"><Progress used={used} total={total} /></div>
+                  </div>
+                  <p className="text-sm font-bold">{remaining} cr restantes</p>
+                  {low ? <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">Saldo baixo</span> : <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-black text-green-800">Saudável</span>}
+                </Link>
+              )
+            })}
+            {clientes.length === 0 ? <p className="p-8 text-center text-sm text-[#6F6D66]">Nenhum cliente cadastrado.</p> : null}
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <h3 className="text-lg font-semibold tracking-[-0.03em]">Fila operacional</h3>
+          <div className="mt-4 grid gap-3">
+            {activeDeliveries.slice(0, 6).map((entrega) => (
+              <article key={entrega.id} className="rounded-lg border border-[#E7E1D7] bg-[#F8F8F6] p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{entrega.nome}</p>
+                    <p className="text-sm text-[#6F6D66]">{entrega.creditos_cobrados} créditos</p>
+                  </div>
+                  <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-black text-blue-700">{entrega.status.replace('_', ' ')}</span>
+                </div>
+              </article>
+            ))}
+            {activeDeliveries.length === 0 ? <p className="text-sm text-[#6F6D66]">Sem entregas abertas.</p> : null}
+          </div>
+        </Card>
+      </section>
+    </Shell>
+  )
+}
+
+function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
+  return (
+    <Card className="p-5">
+      <div className="mb-4 text-[#6F6D66] [&_svg]:h-5 [&_svg]:w-5">{icon}</div>
+      <p className="text-sm text-[#6F6D66]">{label}</p>
+      <p className="mt-1 text-2xl font-black tracking-[-0.04em]">{value}</p>
+    </Card>
   )
 }
