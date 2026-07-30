@@ -1,0 +1,1645 @@
+<title>Fuck Fuck — Mesa de 4</title>
+<style>
+/* Deliberately single-theme: a bright mobile-game card table looks the same
+   day or night, so tokens are not re-mapped under prefers-color-scheme. */
+:root{
+  --felt-950:#0a4a26;
+  --felt-900:#0e7038;
+  --felt-800:#128a44;
+  --felt-700:#1aa855;
+  --rail-900:#083d20;
+  --rail-800:#0a4a26;
+  --rail-700:#0e7038;
+  --gold-300:#ffdd77;
+  --gold-400:#ffc233;
+  --gold-600:#e69100;
+  --cream-50:#ffffff;
+  --cream-100:#eafaf0;
+  --ink-900:#12261c;
+  --ink-700:#2c4a3b;
+  --brick-500:#f0483f;
+  --brick-600:#d33327;
+  --p1-accent:#3d9bf2;
+  --p2-accent:#f2568f;
+  --p3-accent:#ffab2e;
+  --danger:#f0483f;
+  --success:#3ecf75;
+  --font-display: ui-rounded, 'SF Pro Rounded', 'Segoe UI Rounded', system-ui, -apple-system, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --card-w: 60px;
+  --card-h: 86px;
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--cream-50);
+  background:
+    radial-gradient(ellipse 130% 90% at 50% -10%, #2bc464 0%, var(--felt-900) 55%, var(--rail-900) 100%);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+button{font-family:inherit;}
+:focus-visible{outline:2px solid var(--gold-300); outline-offset:2px; border-radius:4px;}
+
+.table-frame{
+  max-width:1080px;
+  margin:0 auto;
+  padding:14px 14px 28px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-height:100vh;
+}
+
+/* ---------- Plaque header ---------- */
+.plaque{
+  background:var(--cream-50);
+  border:none;
+  border-radius:16px;
+  box-shadow:0 4px 0 rgba(6,40,22,.18), 0 10px 20px rgba(0,0,0,.22);
+  padding:10px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.plaque-title{
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:clamp(1.05rem,2.6vw,1.4rem);
+  color:var(--felt-900);
+  letter-spacing:.01em;
+  text-wrap:balance;
+  margin:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.plaque-mid{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+}
+.plaque-round{
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:var(--ink-700);
+  opacity:.7;
+}
+.plaque-contract{
+  font-family:var(--font-display);
+  font-size:clamp(.95rem,2.2vw,1.15rem);
+  color:var(--felt-900);
+  font-weight:800;
+}
+.plaque-actions{display:flex; gap:8px;}
+.chip-btn{
+  background:var(--felt-700);
+  border:none;
+  color:#fff;
+  border-radius:999px;
+  padding:7px 14px;
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.02em;
+  cursor:pointer;
+  box-shadow:0 3px 0 var(--felt-950);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.chip-btn:hover{transform:translateY(-1px);}
+.chip-btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--felt-950);}
+#btnTutorial{background:var(--p1-accent); box-shadow:0 3px 0 #2570b8;}
+#btnNewGame{background:var(--brick-500); box-shadow:0 3px 0 var(--brick-600);}
+
+.score-strip{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  background:var(--cream-50);
+  border-radius:999px;
+  padding:6px 10px;
+  box-shadow:0 3px 0 rgba(6,40,22,.14), 0 6px 14px rgba(0,0,0,.16);
+}
+.score-pill{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:.8rem;
+  color:var(--ink-700);
+  font-weight:600;
+  padding:3px 8px;
+  border-radius:999px;
+}
+.score-pill .dot{width:9px;height:9px;border-radius:50%;flex:none; box-shadow:0 0 0 2px rgba(0,0,0,.06);}
+.score-pill b{font-family:var(--font-mono); font-variant-numeric:tabular-nums; font-weight:700; color:var(--felt-900);}
+.score-pill.you{color:var(--felt-900);}
+.score-pill.turn{background:var(--gold-400); color:var(--ink-900);}
+.score-pill.turn b{color:var(--ink-900);}
+
+/* ---------- Felt table ---------- */
+.felt{
+  position:relative;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 30%, var(--felt-700) 0%, var(--felt-800) 55%, var(--felt-900) 100%);
+  border:7px solid var(--rail-800);
+  border-radius:26px;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.18), inset 0 0 50px rgba(0,0,0,.12), 0 12px 28px rgba(0,0,0,.3);
+  padding:16px;
+  display:grid;
+  grid-template-columns:1fr 1.4fr 1fr;
+  grid-template-rows:auto auto;
+  grid-template-areas:
+    "seatL seatT seatR"
+    "seatL center seatR";
+  gap:14px;
+  min-height:420px;
+}
+@media (max-width:720px){
+  .felt{grid-template-columns:1fr; grid-template-areas:"seatT" "seatL" "seatR" "center"; min-height:auto;}
+}
+.curingas-badge{
+  position:absolute; top:10px; left:10px; z-index:2;
+  display:flex; align-items:center; gap:5px;
+  background:var(--ink-900);
+  color:var(--gold-300);
+  font-size:.68rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+  padding:5px 10px 5px 8px;
+  border-radius:999px;
+  box-shadow:0 3px 8px rgba(0,0,0,.35);
+}
+.curingas-badge .pip{font-size:.95rem;}
+
+.seat{
+  background:rgba(6,30,18,.32);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:16px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  transition:box-shadow .25s ease;
+  min-width:0;
+}
+.seat.active{box-shadow:0 0 0 2px var(--gold-400), 0 0 22px rgba(201,162,39,.35);}
+@media (prefers-reduced-motion: no-preference){
+  .seat.active{animation:pulseGold 1.8s ease-in-out infinite;}
+}
+@keyframes pulseGold{
+  0%,100%{box-shadow:0 0 0 2px var(--gold-400), 0 0 14px rgba(201,162,39,.25);}
+  50%{box-shadow:0 0 0 2px var(--gold-300), 0 0 26px rgba(201,162,39,.5);}
+}
+#seat-1{grid-area:seatL;}
+#seat-2{grid-area:seatT;}
+#seat-3{grid-area:seatR;}
+
+.seat-head{display:flex; align-items:center; gap:8px;}
+.avatar{
+  position:relative;
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display); font-weight:800; font-size:.9rem;
+  color:#fff;
+  flex:none;
+  box-shadow:0 2px 0 rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.4);
+  border:2px solid rgba(255,255,255,.55);
+}
+.avatar::after{
+  content:attr(data-count);
+  position:absolute; right:-5px; bottom:-5px;
+  min-width:16px; height:16px; padding:0 3px;
+  border-radius:999px;
+  background:var(--success);
+  border:2px solid var(--cream-50);
+  color:#fff;
+  font-family:var(--font-mono); font-weight:700; font-size:.6rem;
+  display:flex; align-items:center; justify-content:center;
+}
+.seat-name{font-weight:700; font-size:.88rem; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.seat-status{font-size:.68rem; color:var(--gold-300); opacity:.95; min-height:1em; font-weight:600;}
+.seat-hand-row{display:flex; align-items:center; gap:8px;}
+.backstack{position:relative; width:44px; height:38px; flex:none;}
+.backcard{
+  position:absolute; width:26px; height:36px; border-radius:4px;
+  background:
+    repeating-linear-gradient(45deg, var(--p1-accent) 0 4px, #eaf4ff 4px 8px);
+  border:1.5px solid #fff;
+  box-shadow:0 2px 4px rgba(0,0,0,.35);
+}
+.backcard.b0{left:0; top:2px; transform:rotate(-6deg);}
+.backcard.b1{left:9px; top:0; transform:rotate(0deg);}
+.backcard.b2{left:18px; top:2px; transform:rotate(6deg);}
+.hand-count{font-size:.78rem; color:var(--cream-100); font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+.seat-score{font-size:.72rem; color:var(--cream-100); opacity:.85; font-family:var(--font-mono);}
+
+.meld-zone{display:flex; flex-direction:column; gap:6px; min-height:4px;}
+.meld-chip{
+  display:flex; align-items:center; gap:6px; flex-wrap:nowrap;
+  background:rgba(255,255,255,.14);
+  border:2px solid var(--success);
+  box-shadow:0 0 0 2px rgba(62,207,117,.25);
+  border-radius:10px;
+  padding:4px 6px;
+  width:100%;
+  overflow-x:auto;
+}
+.meld-chip.clickable{cursor:pointer; border-color:var(--gold-400); box-shadow:0 0 0 2px rgba(255,194,51,.35);}
+.meld-chip.clickable:hover{background:rgba(255,194,51,.22);}
+.meld-label{font-size:.62rem; text-transform:uppercase; letter-spacing:.06em; color:var(--gold-300); flex:none; writing-mode:vertical-rl; text-orientation:mixed; text-shadow:0 1px 2px rgba(0,0,0,.4);}
+
+/* ---------- Center stage ---------- */
+.center-stage{
+  grid-area:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+.piles{display:flex; gap:26px; align-items:flex-end;}
+.pile{display:flex; flex-direction:column; align-items:center; gap:6px;}
+.pile-label{font-size:.66rem; text-transform:uppercase; letter-spacing:.08em; color:#fff; opacity:.9; text-shadow:0 1px 3px rgba(0,0,0,.35); font-weight:700;}
+.pile-card-slot{width:var(--card-w); height:var(--card-h); position:relative;}
+.pile-deck{
+  width:100%; height:100%; border-radius:8px;
+  background:repeating-linear-gradient(45deg, var(--brick-500) 0 6px, #fff 6px 12px);
+  border:2px solid #fff;
+  box-shadow:0 3px 0 rgba(0,0,0,.25), 0 6px 14px rgba(0,0,0,.3);
+  display:flex; align-items:center; justify-content:center;
+  cursor:default;
+  transition:transform .15s ease;
+}
+.pile-deck span{
+  background:var(--ink-900); color:var(--gold-300);
+  font-family:var(--font-mono); font-weight:700; font-size:.78rem;
+  padding:2px 7px; border-radius:999px;
+}
+.pile-deck.clickable{cursor:pointer;}
+.pile-deck.clickable:hover{transform:translateY(-3px);}
+.pile-empty{
+  width:100%; height:100%; border-radius:8px; border:2px dashed rgba(255,255,255,.45);
+  display:flex; align-items:center; justify-content:center; font-size:.65rem; color:#fff; opacity:.8;
+}
+.turn-indicator{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:.95rem;
+  color:#fff;
+  text-shadow:0 1px 4px rgba(0,0,0,.4);
+  text-align:center;
+  min-height:1.4em;
+}
+.dots::after{content:'\2026'; }
+.out-of-turn-hint{
+  font-size:.72rem;
+  font-weight:700;
+  color:var(--brick-600);
+  background:var(--cream-50);
+  border:2px solid var(--brick-500);
+  border-radius:999px;
+  padding:5px 12px;
+  text-align:center;
+  max-width:280px;
+  min-height:1.2em;
+  box-shadow:0 3px 8px rgba(0,0,0,.2);
+}
+.out-of-turn-hint:empty{display:none; box-shadow:none;}
+.pile-card-slot.snipable .card{cursor:pointer; box-shadow:0 0 0 3px var(--brick-500), 0 4px 8px rgba(0,0,0,.35);}
+
+/* ---------- Card widgets ---------- */
+.card{
+  width:var(--card-w); height:var(--card-h);
+  border-radius:9px;
+  background:var(--cream-50);
+  border:1px solid rgba(0,0,0,.14);
+  box-shadow:0 2px 0 rgba(0,0,0,.16), 0 4px 8px rgba(0,0,0,.22);
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  cursor:default;
+  flex:none;
+  transition:transform .12s ease, box-shadow .12s ease;
+  color:var(--ink-900);
+  font-family:var(--font-body);
+}
+.card.clickable{cursor:pointer;}
+.card.clickable:hover{transform:translateY(-6px);}
+.card.selected{transform:translateY(-12px); box-shadow:0 0 0 2px var(--gold-400), 0 10px 16px rgba(0,0,0,.45);}
+.card.red{color:var(--brick-600);}
+.card.black{color:var(--ink-900);}
+.card.joker{background:linear-gradient(160deg, #2f2415, #1a1309); color:var(--gold-300); border-color:var(--gold-500,var(--gold-400));}
+.card .corner{position:absolute; font-size:.62rem; line-height:1.02; font-weight:700; text-align:center;}
+.card .corner.tl{top:4px; left:4px;}
+.card .corner.br{bottom:4px; right:4px; transform:rotate(180deg);}
+.card .pip{font-size:1.5rem;}
+.card.joker .pip{font-size:1.3rem;}
+.card-sm{width:34px; height:48px; border-radius:5px; font-size:.6rem;}
+.card-sm .pip{font-size:.85rem;}
+.card-sm .corner{font-size:.42rem;}
+
+/* ---------- Footer / player rail ---------- */
+.player-rail{
+  background:linear-gradient(180deg, rgba(6,30,18,.4), rgba(6,30,18,.5));
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:18px;
+  padding:12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.rail-top{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+.hand-info{font-size:.85rem; color:var(--cream-100);}
+.hand-info b{color:var(--gold-300); font-family:var(--font-mono);}
+.sort-toggle{background:var(--cream-50); border:none; color:var(--felt-900); font-weight:700; border-radius:999px; padding:6px 11px; font-size:.72rem; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.15);}
+.sort-toggle:hover{background:var(--gold-300);}
+
+.my-melds{display:flex; gap:8px; flex-wrap:wrap;}
+
+.hand-fan{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding:14px 4px 8px;
+  scrollbar-color:var(--gold-600) transparent;
+}
+.hand-fan::-webkit-scrollbar{height:8px;}
+.hand-fan::-webkit-scrollbar-thumb{background:var(--gold-600); border-radius:4px;}
+/* touch-action stays default (auto) so a quick swipe still scrolls the hand
+   normally; JS switches it to "none" only once a drag actually starts. */
+#handFan .card{cursor:grab;}
+#handFan .card.card-dragging{
+  cursor:grabbing;
+  z-index:20;
+  box-shadow:0 14px 26px rgba(0,0,0,.45), 0 0 0 2px var(--gold-300);
+  transition:none;
+}
+
+.action-bar{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.act-btn{
+  background:var(--cream-50);
+  border:none;
+  color:var(--felt-900);
+  border-radius:12px;
+  padding:10px 16px;
+  font-size:.82rem;
+  font-weight:700;
+  letter-spacing:.02em;
+  cursor:pointer;
+  box-shadow:0 3px 0 rgba(6,40,22,.35);
+  transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+.act-btn:hover:not(:disabled){transform:translateY(-2px);}
+.act-btn:active:not(:disabled){transform:translateY(1px); box-shadow:0 1px 0 rgba(6,40,22,.35);}
+.act-btn:disabled{opacity:.45; cursor:not-allowed;}
+.act-btn.primary{background:var(--gold-400); color:var(--ink-900); box-shadow:0 3px 0 var(--gold-600);}
+.act-btn.danger{background:var(--brick-500); color:#fff; box-shadow:0 3px 0 var(--brick-600);}
+.hint-text{font-size:.74rem; color:var(--cream-100); opacity:.9; min-height:1.2em;}
+
+/* ---------- Log drawer ---------- */
+.log-drawer{background:rgba(6,30,18,.4); border:1px solid rgba(255,255,255,.14); border-radius:14px; overflow:hidden;}
+.log-toggle{
+  width:100%; text-align:left; background:transparent; border:none; color:var(--cream-100);
+  padding:9px 14px; font-size:.78rem; cursor:pointer; display:flex; justify-content:space-between;
+}
+.log-toggle:hover{color:var(--gold-300);}
+.log-body{max-height:0; overflow-y:auto; transition:max-height .25s ease; padding:0 14px; font-size:.76rem; color:var(--cream-100); font-family:var(--font-mono);}
+.log-drawer.open .log-body{max-height:160px; padding:0 14px 12px;}
+.log-entry{padding:3px 0; border-bottom:1px dashed rgba(255,255,255,.06); opacity:.85;}
+.log-entry:last-child{border-bottom:none;}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(6,14,11,.72);
+  display:none; align-items:center; justify-content:center; padding:20px; z-index:50;
+}
+.modal-overlay.show{display:flex;}
+.modal{
+  background:linear-gradient(180deg, #17392f, #0e2620);
+  border:1px solid var(--gold-600);
+  border-radius:16px;
+  padding:22px 24px;
+  max-width:460px; width:100%;
+  max-height:86vh; overflow-y:auto;
+  box-shadow:0 20px 50px rgba(0,0,0,.6);
+}
+.modal h2{font-family:var(--font-display); color:var(--gold-300); margin:0 0 4px; font-size:1.3rem; text-wrap:balance;}
+.modal p{font-size:.85rem; color:var(--cream-100); line-height:1.5;}
+.modal table{width:100%; border-collapse:collapse; margin:10px 0; font-size:.82rem;}
+.modal table td, .modal table th{padding:5px 6px; text-align:left; border-bottom:1px solid rgba(255,255,255,.1);}
+.modal table th{color:var(--gold-300); font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;}
+.modal .rank1{color:var(--gold-300); font-weight:700;}
+.modal-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap;}
+.modal-list{list-style:none; margin:8px 0; padding:0; display:flex; flex-direction:column; gap:5px;}
+.modal-list li{font-size:.82rem; padding:6px 8px; border-radius:7px; background:rgba(255,255,255,.04); display:flex; justify-content:space-between; gap:8px;}
+.modal-list li.current{background:rgba(201,162,39,.16); border:1px solid var(--gold-400); color:var(--gold-300); font-weight:600;}
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed; left:50%; bottom:20px; transform:translate(-50%,20px);
+  background:var(--ink-900); color:var(--gold-300); border:1px solid var(--gold-600);
+  padding:10px 16px; border-radius:10px; font-size:.82rem; opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease; z-index:60; max-width:80vw; text-align:center;
+}
+#toast.show{opacity:1; transform:translate(-50%,0);}
+
+/* ---------- Newly-drawn card callout ----------
+   Deliberately NOT gold/lifted like .selected — sharing that look made a
+   freshly-drawn card and a card you'd picked for your next play blend
+   together and impossible to tell apart at a glance. "Nova" is now a quiet
+   white tag with no lift; .selected keeps the strong gold ring + lift as the
+   one unambiguous "this card is part of my move" signal. When a card is both
+   new and selected, the selected rule (declared after, same specificity)
+   wins the box-shadow/transform outright — the white tag alone still shows. */
+.card.new-draw{
+  box-shadow:0 0 0 2px rgba(255,255,255,.85), 0 4px 8px rgba(0,0,0,.22);
+}
+.card.new-draw::before{
+  content:'nova';
+  position:absolute; top:-13px; left:50%; transform:translateX(-50%);
+  background:#fff; color:var(--felt-900);
+  font-size:.5rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+  padding:1px 6px; border-radius:999px; white-space:nowrap;
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+.card.penalty-draw{
+  box-shadow:0 0 0 2px var(--brick-500), 0 4px 8px rgba(0,0,0,.22);
+}
+.card.penalty-draw::before{
+  content:'penalidade';
+  position:absolute; top:-13px; left:50%; transform:translateX(-50%);
+  background:var(--brick-500); color:#fff0ec;
+  font-size:.5rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+  padding:1px 6px; border-radius:999px; white-space:nowrap;
+}
+.card.selected.new-draw, .card.selected.penalty-draw{
+  box-shadow:0 0 0 2px var(--gold-400), 0 10px 16px rgba(0,0,0,.45);
+}
+@media (prefers-reduced-motion: no-preference){
+  .card.new-draw, .card.penalty-draw{ animation:fadeIn .35s ease; }
+}
+@keyframes fadeIn{ from{ opacity:.3; } to{ opacity:1; } }
+
+/* ---------- Guided tutorial ---------- */
+.tutorial-spotlight{
+  position:relative;
+  z-index:70;
+  box-shadow:0 0 0 4px var(--gold-300), 0 0 0 9999px rgba(5,10,8,.72);
+  border-radius:12px;
+}
+@media (prefers-reduced-motion: no-preference){
+  .tutorial-spotlight{ transition:box-shadow .25s ease; }
+}
+.tutorial-panel{
+  display:none;
+  position:fixed;
+  left:50%; bottom:18px; transform:translateX(-50%);
+  z-index:80;
+  width:min(420px, calc(100vw - 28px));
+  background:linear-gradient(180deg, #1c463c, #123830);
+  border:1px solid var(--gold-600);
+  border-radius:14px;
+  padding:16px 18px;
+  box-shadow:0 16px 40px rgba(0,0,0,.55);
+}
+.tutorial-panel.show{display:block;}
+.tutorial-progress{display:flex; gap:5px; margin-bottom:10px;}
+.tutorial-progress span{width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.18);}
+.tutorial-progress span.on{background:var(--gold-300);}
+.tutorial-title{font-family:var(--font-display); color:var(--gold-300); margin:0 0 6px; font-size:1.08rem;}
+.tutorial-body{font-size:.85rem; color:var(--cream-100); line-height:1.5; margin:0 0 14px;}
+.tutorial-actions{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+.tutorial-skip{background:none; border:none; color:var(--cream-100); opacity:.7; font-size:.76rem; cursor:pointer; text-decoration:underline; padding:0;}
+.tutorial-skip:hover{opacity:1; color:var(--gold-300);}
+.tutorial-nav{display:flex; gap:8px;}
+</style>
+
+<div class="table-frame">
+
+  <header class="plaque">
+    <h1 class="plaque-title">🃏 Fuck&nbsp;Fuck</h1>
+    <div class="plaque-mid">
+      <div class="plaque-round">Rodada <span id="roundNum">1</span> de 6</div>
+      <div class="plaque-contract" id="contractLabel">—</div>
+    </div>
+    <div class="plaque-actions">
+      <button class="chip-btn" id="btnTutorial" type="button">Tutorial</button>
+      <button class="chip-btn" id="btnRules" type="button">Regras</button>
+      <button class="chip-btn" id="btnNewGame" type="button">Novo jogo</button>
+    </div>
+  </header>
+
+  <div class="score-strip" id="scoreStrip"></div>
+
+  <div class="felt">
+    <div class="curingas-badge"><span class="pip">🃏</span><span>Curinga livre</span></div>
+    <div class="seat" id="seat-1">
+      <div class="seat-head"><div class="avatar" id="avatar-1"></div><div class="seat-name" id="name-1"></div></div>
+      <div class="seat-status" id="status-1"></div>
+      <div class="seat-hand-row">
+        <div class="backstack"><div class="backcard b0"></div><div class="backcard b1"></div><div class="backcard b2"></div></div>
+        <span class="hand-count" id="count-1"></span>
+      </div>
+      <div class="meld-zone" id="melds-1"></div>
+      <div class="seat-score" id="score-1"></div>
+    </div>
+
+    <div class="seat" id="seat-2">
+      <div class="seat-head"><div class="avatar" id="avatar-2"></div><div class="seat-name" id="name-2"></div></div>
+      <div class="seat-status" id="status-2"></div>
+      <div class="seat-hand-row">
+        <div class="backstack"><div class="backcard b0"></div><div class="backcard b1"></div><div class="backcard b2"></div></div>
+        <span class="hand-count" id="count-2"></span>
+      </div>
+      <div class="meld-zone" id="melds-2"></div>
+      <div class="seat-score" id="score-2"></div>
+    </div>
+
+    <div class="seat" id="seat-3">
+      <div class="seat-head"><div class="avatar" id="avatar-3"></div><div class="seat-name" id="name-3"></div></div>
+      <div class="seat-status" id="status-3"></div>
+      <div class="seat-hand-row">
+        <div class="backstack"><div class="backcard b0"></div><div class="backcard b1"></div><div class="backcard b2"></div></div>
+        <span class="hand-count" id="count-3"></span>
+      </div>
+      <div class="meld-zone" id="melds-3"></div>
+      <div class="seat-score" id="score-3"></div>
+    </div>
+
+    <div class="center-stage">
+      <div class="piles">
+        <div class="pile">
+          <div class="pile-label">Monte</div>
+          <div class="pile-card-slot" id="drawPile"></div>
+        </div>
+        <div class="pile">
+          <div class="pile-label">Descarte</div>
+          <div class="pile-card-slot" id="discardPile"></div>
+        </div>
+      </div>
+      <div class="turn-indicator" id="turnIndicator">Preparando a mesa…</div>
+      <div class="out-of-turn-hint" id="outOfTurnHint"></div>
+    </div>
+  </div>
+
+  <footer class="player-rail">
+    <div class="rail-top">
+      <div class="hand-info" id="handInfo">Sua mão</div>
+      <button class="sort-toggle" id="btnSort" type="button">Ordenar por naipe</button>
+    </div>
+    <div class="my-melds" id="melds-0"></div>
+    <div class="hand-fan" id="handFan"></div>
+    <div class="action-bar">
+      <button class="act-btn primary" id="btnBaixar" type="button">Descer jogo</button>
+      <button class="act-btn" id="btnAjuda" type="button">Sugerir descida</button>
+      <button class="act-btn danger" id="btnDescartar" type="button">Descartar carta</button>
+    </div>
+    <div class="hint-text" id="hintText"></div>
+  </footer>
+
+  <div class="log-drawer" id="logDrawer">
+    <button class="log-toggle" id="logToggle" type="button"><span>Registro da partida</span><span id="logChevron">▾</span></button>
+    <div class="log-body" id="logBody"></div>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal"></div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div class="tutorial-panel" id="tutorialPanel">
+  <div class="tutorial-progress" id="tutorialProgress"></div>
+  <h3 class="tutorial-title" id="tutorialTitle"></h3>
+  <p class="tutorial-body" id="tutorialBody"></p>
+  <div class="tutorial-actions">
+    <button class="tutorial-skip" id="tutorialSkip" type="button">Pular tutorial</button>
+    <div class="tutorial-nav">
+      <button class="act-btn" id="tutorialPrev" type="button">Voltar</button>
+      <button class="act-btn primary" id="tutorialNext" type="button">Avançar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ============================== CONSTANTS ============================== */
+const SUITS = [
+  {sym:'♠', color:'black'},
+  {sym:'♥', color:'red'},
+  {sym:'♦', color:'red'},
+  {sym:'♣', color:'black'},
+];
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+// Pontos das cartas que sobram na mão: 2-10 = valor da carta, J/Q/K = 10, Ás = 15, Curinga = 20.
+const RANK_VALUE = {A:15,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:10,Q:10,K:10};
+const JOKER_VALUE = 20;
+const SET_SIZE = 3;   // menor grupo de mesmo número que pode existir (trinca)
+const RUN_SIZE = 7;   // única sequência do jogo é a canastra de 7
+const TENTOS_BUDGET = 7; // fichas por jogador para comprar do descarte na partida toda — não se renovam
+
+const CONTRACTS = [
+  {label:'1 Trinca', short:'1 Trinca', groups:[{type:'set', size:3}]},
+  {label:'2 Trincas', short:'2 Trincas', groups:[{type:'set', size:3}, {type:'set', size:3}]},
+  {label:'1 Quadra', short:'1 Quadra', groups:[{type:'set', size:4}]},
+  {label:'2 Quadras', short:'2 Quadras', groups:[{type:'set', size:4}, {type:'set', size:4}]},
+  {label:'1 Quina', short:'1 Quina', groups:[{type:'set', size:5}]},
+  {label:'1 Canastra (sequência de 7)', short:'Canastra', groups:[{type:'run', size:7}]},
+];
+
+const PLAYER_META = [
+  {name:'Você', accent:'var(--gold-400)', isHuman:true},
+  {name:'Zé', accent:'var(--p1-accent)', isHuman:false},
+  {name:'Marisa', accent:'var(--p2-accent)', isHuman:false},
+  {name:'Beto', accent:'var(--p3-accent)', isHuman:false},
+];
+
+/* ============================== STATE ============================== */
+let cardUid = 0;
+let state = null;
+
+function buildDeck(){
+  const deck = [];
+  for(let d=0; d<2; d++){
+    for(const s of SUITS){
+      for(const r of RANKS){
+        deck.push({id:'c'+(cardUid++), suit:s.sym, color:s.color, rank:r, isJoker:false});
+      }
+    }
+    deck.push({id:'c'+(cardUid++), suit:null, color:'gold', rank:'JOKER', isJoker:true});
+    deck.push({id:'c'+(cardUid++), suit:null, color:'gold', rank:'JOKER', isJoker:true});
+  }
+  return deck;
+}
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function initGame(){
+  state = {
+    round: 0,
+    players: PLAYER_META.map((m,i)=>({
+      id:i, name:m.name, isHuman:m.isHuman,
+      hand:[], melds:[], laidDown:false,
+      totalScore:0, roundScore:0,
+      tentosLeft:TENTOS_BUDGET, // spendable budget for the WHOLE game, never renews
+    })),
+    drawPile: [],
+    discardPile: [],
+    turn: 0,
+    phase: 'idle',
+    selected: new Set(),
+    sortMode: 'suit',
+    log: [],
+    roundTurns: 0,
+    lastProgressTurn: 0,
+    lastDrawnIds: new Set(),
+    handOrder: null,
+  };
+  document.getElementById('logBody').innerHTML = '';
+  startRound();
+}
+
+function startRound(){
+  const deck = shuffle(buildDeck());
+  state.drawPile = deck;
+  state.discardPile = [];
+  for(const p of state.players){ p.hand = []; p.melds = []; p.laidDown = false; p.roundScore = 0; }
+  for(let i=0;i<12;i++){
+    for(const p of state.players){ p.hand.push(state.drawPile.pop()); }
+  }
+  state.discardPile.push(state.drawPile.pop());
+  state.turn = state.round % 4;
+  state.phase = 'await-draw';
+  state.selected.clear();
+  state.roundTurns = 0;
+  state.lastProgressTurn = 0;
+  state.lastDrawnIds = new Set();
+  state.handOrder = null;
+  logMsg('— Rodada ' + (state.round+1) + ': ' + CONTRACTS[state.round].label + ' —');
+  render();
+  if(!state.players[state.turn].isHuman) setTimeout(botTurn, 900);
+}
+
+/* ============================== GROUP LOGIC ============================== */
+function analyzeGroup(cards){
+  const n = cards.length;
+  const jokers = cards.filter(c=>c.isJoker);
+  const normal = cards.filter(c=>!c.isJoker);
+  let canSet=false, canRun=false;
+  if(normal.length===0){
+    return {canSet:n>=SET_SIZE, canRun:n>=RUN_SIZE};
+  }
+  const ranks = new Set(normal.map(c=>c.rank));
+  if(ranks.size===1 && n>=SET_SIZE) canSet = true;
+  const suits = new Set(normal.map(c=>c.suit));
+  if(suits.size===1 && n>=RUN_SIZE){
+    const idxs = normal.map(c=>RANKS.indexOf(c.rank));
+    if(new Set(idxs).size === idxs.length){
+      const minI = Math.min(...idxs), maxI = Math.max(...idxs);
+      const L = n;
+      const sFrom = Math.max(0, maxI-L+1);
+      const sTo = Math.min(minI, RANKS.length-L);
+      if(sFrom <= sTo) canRun = true;
+    }
+  }
+  void jokers;
+  return {canSet, canRun};
+}
+
+function canAddToMeld(meld, card){
+  const trial = meld.cards.concat([card]);
+  const {canSet, canRun} = analyzeGroup(trial);
+  return meld.type==='set' ? canSet : canRun;
+}
+
+function combinationsIdx(n,k){
+  const res = []; const combo = [];
+  (function rec(start){
+    if(combo.length===k){ res.push(combo.slice()); return; }
+    for(let i=start;i<n;i++){ combo.push(i); rec(i+1); combo.pop(); }
+  })(0);
+  return res;
+}
+function findGroupsOfSize(cards, size, wantSet){
+  const combos = combinationsIdx(cards.length, size);
+  const groups = [];
+  for(const combo of combos){
+    const gcards = combo.map(i=>cards[i]);
+    const {canSet, canRun} = analyzeGroup(gcards);
+    if((wantSet && canSet) || (!wantSet && canRun)) groups.push(combo);
+  }
+  return groups;
+}
+
+// groupSpecs: array of {type:'set'|'run', size:N} — one entry per group the
+// contract requires (e.g. "2 Quadras" = two {type:'set', size:4} entries).
+// Finds a disjoint assignment of cards to each required group, in order.
+function tryPartition(cards, groupSpecs){
+  const used = new Array(cards.length).fill(false);
+  const overlaps = combo => combo.some(i=>used[i]);
+  const mark = (combo,v) => combo.forEach(i=>used[i]=v);
+  const groupCache = new Map();
+  function candidatesFor(spec){
+    const key = spec.type+':'+spec.size;
+    if(!groupCache.has(key)) groupCache.set(key, findGroupsOfSize(cards, spec.size, spec.type==='set'));
+    return groupCache.get(key);
+  }
+  const chosen = new Array(groupSpecs.length).fill(null);
+  function rec(idx){
+    if(idx>=groupSpecs.length) return true;
+    const candidates = candidatesFor(groupSpecs[idx]);
+    for(const combo of candidates){
+      if(overlaps(combo)) continue;
+      mark(combo,true);
+      chosen[idx] = combo;
+      if(rec(idx+1)) return true;
+      mark(combo,false);
+      chosen[idx] = null;
+    }
+    return false;
+  }
+  const ok = rec(0);
+  if(!ok) return null;
+  return chosen.map((combo,i)=>({type:groupSpecs[i].type, cards:combo.map(j=>cards[j])}));
+}
+
+/* ============================== CORE ACTIONS ============================== */
+function ensureDrawPile(){
+  if(state.drawPile.length===0){
+    if(state.discardPile.length<=1) return false;
+    const top = state.discardPile.pop();
+    state.drawPile = shuffle(state.discardPile);
+    state.discardPile = [top];
+    logMsg('O monte acabou — o descarte foi embaralhado para formar um novo monte.');
+  }
+  return true;
+}
+function drawCard(playerIdx, source){
+  const p = state.players[playerIdx];
+  let card;
+  if(source==='discard'){
+    if(state.discardPile.length===0) return false;
+    card = state.discardPile.pop();
+  } else {
+    if(!ensureDrawPile()) return false;
+    card = state.drawPile.pop();
+  }
+  p.hand.push(card);
+  return true;
+}
+
+function layDownContract(playerIdx, cardObjs){
+  const contract = CONTRACTS[state.round];
+  const result = tryPartition(cardObjs, contract.groups);
+  if(!result) return false;
+  const p = state.players[playerIdx];
+  const usedIds = new Set(cardObjs.map(c=>c.id));
+  p.hand = p.hand.filter(c=>!usedIds.has(c.id));
+  for(const g of result) p.melds.push({type:g.type, cards:g.cards, owner:playerIdx});
+  p.laidDown = true;
+  state.lastProgressTurn = state.roundTurns;
+  logMsg(p.name + ' desceu o jogo (' + contract.short + ').');
+  return true;
+}
+
+// Comprar do descarte custa 1 tento e vem "pacote": a carta escolhida +
+// 3 cartas aleatórias do monte fechado, todas de uma vez. Só descarta 1 depois.
+function canBuyFromDiscard(playerIdx){
+  return state.players[playerIdx].tentosLeft > 0 && state.discardPile.length > 0;
+}
+function drawFromDiscardWithPenalty(playerIdx){
+  const p = state.players[playerIdx];
+  if(!canBuyFromDiscard(playerIdx)) return false;
+  const chosen = state.discardPile.pop();
+  p.hand.push(chosen);
+  const gainedIds = [chosen.id];
+  for(let i=0;i<3;i++){
+    if(!ensureDrawPile()) break;
+    const c = state.drawPile.pop();
+    p.hand.push(c);
+    gainedIds.push(c.id);
+  }
+  p.tentosLeft -= 1;
+  if(playerIdx===0) state.lastDrawnIds = new Set(gainedIds);
+  logMsg(p.name + ' comprou ' + cardLabel(chosen) + ' do descarte + ' + (gainedIds.length-1) + ' carta(s) do monte (gastou 1 tento — restam ' + p.tentosLeft + ').');
+  return true;
+}
+
+function addCardToMeld(playerIdx, card, meld){
+  if(!canAddToMeld(meld, card)) return false;
+  meld.cards.push(card);
+  const p = state.players[playerIdx];
+  p.hand = p.hand.filter(c=>c.id!==card.id);
+  state.lastProgressTurn = state.roundTurns;
+  logMsg(p.name + ' acrescentou ' + cardLabel(card) + ' a um jogo na mesa.');
+  return true;
+}
+
+// Once a player has laid their required game, leftover cards don't only get
+// attached to melds already on the table — they can also form brand-new
+// standalone melds (any 3+ of the same number, or another 7-run). Without
+// this, a player stuck with cards that match none of the ~4 melds on the
+// table can never empty their hand and the round deadlocks forever.
+function layExtraMeld(playerIdx, cardObjs){
+  const {canSet, canRun} = analyzeGroup(cardObjs);
+  if(!canSet && !canRun) return false;
+  const p = state.players[playerIdx];
+  const usedIds = new Set(cardObjs.map(c=>c.id));
+  p.hand = p.hand.filter(c=>!usedIds.has(c.id));
+  p.melds.push({type: canSet ? 'set' : 'run', cards:cardObjs, owner:playerIdx});
+  state.lastProgressTurn = state.roundTurns;
+  logMsg(p.name + ' baixou mais um jogo (' + cardObjs.map(cardLabel).join(' ') + ').');
+  return true;
+}
+function findExtraSet(hand){
+  const combos = findGroupsOfSize(hand, 3, true);
+  return combos.length>0 ? combos[0].map(i=>hand[i]) : null;
+}
+function findExtraRun(hand){
+  const combos = findGroupsOfSize(hand, RUN_SIZE, false);
+  return combos.length>0 ? combos[0].map(i=>hand[i]) : null;
+}
+
+function discardCard(playerIdx, card){
+  const p = state.players[playerIdx];
+  p.hand = p.hand.filter(c=>c.id!==card.id);
+  state.discardPile.push(card);
+  logMsg(p.name + ' descartou ' + cardLabel(card) + '.');
+  // Discarding ends the turn, so the "nova" highlight from this turn's draw
+  // is done its job — clear it fully, not just the discarded card's id, or a
+  // kept card stays tagged "nova" forever and keeps re-triggering scrollIntoView
+  // on every future render (including during bot turns).
+  if(playerIdx===0) state.lastDrawnIds = new Set();
+  if(p.hand.length===0){ endRound(playerIdx); return; }
+  nextTurn();
+}
+
+function nextTurn(){
+  state.turn = (state.turn+1)%4;
+  state.roundTurns++;
+  state.selected.clear();
+  state.phase = 'await-draw';
+  render();
+  if(!state.players[state.turn].isHuman) setTimeout(botTurn, 900);
+}
+
+function endRound(winnerIdx){
+  state.phase = 'round-over';
+  for(const p of state.players){
+    if(p.id===winnerIdx){ p.roundScore = 0; continue; }
+    let pts = 0;
+    for(const c of p.hand) pts += c.isJoker ? JOKER_VALUE : RANK_VALUE[c.rank];
+    p.roundScore = pts;
+    p.totalScore += pts;
+  }
+  logMsg(state.players[winnerIdx].name + ' bateu! Fim da rodada ' + (state.round+1) + '.');
+  render();
+  showRoundSummary(winnerIdx);
+}
+
+function forceEndRoundByExhaustion(){
+  state.phase = 'round-over';
+  for(const p of state.players){
+    let pts = 0;
+    for(const c of p.hand) pts += c.isJoker ? JOKER_VALUE : RANK_VALUE[c.rank];
+    p.roundScore = pts; p.totalScore += pts;
+  }
+  logMsg('As cartas acabaram — a rodada terminou sem ninguém bater. Todos pontuam pela mão.');
+  render();
+  showRoundSummary(null);
+}
+
+function goToNextRound(){
+  state.round++;
+  hideModal();
+  if(state.round>=CONTRACTS.length){ showFinalResults(); return; }
+  startRound();
+}
+
+/* ============================== BOT AI ============================== */
+// Utility of a card towards THIS ROUND's contract: rank-clustering only counts
+// when the contract needs sets, suit-adjacency only counts when it needs runs.
+// Without this split, bots hoard rank pairs even in pure-sequence rounds and can
+// stalemate forever, endlessly trading useless cards through the discard pile.
+function cardUtility(hand, card, contract){
+  if(card.isJoker) return 50;
+  let util = 0;
+  if(contract.groups.some(g=>g.type==='set')){
+    const sameRank = hand.filter(o=>o.id!==card.id && !o.isJoker && o.rank===card.rank).length;
+    util += sameRank * 4;
+  }
+  if(contract.groups.some(g=>g.type==='run')){
+    const idx = RANKS.indexOf(card.rank);
+    let adj = 0;
+    for(const o of hand){
+      if(o.id===card.id || o.isJoker || o.suit!==card.suit) continue;
+      if(Math.abs(RANKS.indexOf(o.rank)-idx)<=3) adj++;
+    }
+    util += adj * 3;
+  }
+  return util;
+}
+
+function botTurn(){
+  const idx = state.turn;
+  const p = state.players[idx];
+  const contract = CONTRACTS[state.round];
+  state.phase = 'bot-turn';
+  render();
+  const top = state.discardPile[state.discardPile.length-1];
+  let useDiscard = false;
+  // Buying the discard costs 1 tento AND saddles the bot with 3 extra random
+  // cards on top of the one it wanted — a net +3 hand growth. Left unchecked
+  // this snowballs hands to 30+ cards and no round ever ends, so bots only
+  // take it when it is genuinely worth the price, and never past a hand-size cap.
+  if(top && p.hand.length < 15 && canBuyFromDiscard(idx)){
+    if(top.isJoker){
+      useDiscard = true;
+    } else if(!p.laidDown){
+      const completesGame = !!tryPartition(p.hand.concat([top]), contract.groups);
+      useDiscard = completesGame || cardUtility(p.hand, top, contract) >= 12;
+    } else {
+      useDiscard = state.players.some(pl => pl.melds.some(m => canAddToMeld(m, top)));
+    }
+  }
+  setTimeout(()=>{
+    if(useDiscard && top){
+      drawFromDiscardWithPenalty(idx);
+    } else {
+      const got = drawCard(idx,'deck');
+      if(!got){ forceEndRoundByExhaustion(); return; }
+      logMsg(p.name + ' comprou do monte.');
+    }
+    render();
+    setTimeout(()=>botActPhase(idx), 700);
+  }, 550);
+}
+
+function botActPhase(idx){
+  const p = state.players[idx];
+  const contract = CONTRACTS[state.round];
+  if(!p.laidDown){
+    const result = tryPartition(p.hand, contract.groups);
+    if(result){
+      const chosen = [].concat(...result.map(g=>g.cards));
+      layDownContract(idx, chosen);
+    }
+  }
+  if(p.laidDown){
+    let progress = true;
+    while(progress && p.hand.length>0){
+      progress = false;
+      outer:
+      for(const c of p.hand.slice()){
+        for(const pl of state.players){
+          for(const meld of pl.melds){
+            if(canAddToMeld(meld, c)){
+              addCardToMeld(idx, c, meld);
+              progress = true;
+              break outer;
+            }
+          }
+        }
+      }
+      if(!progress){
+        const extra = findExtraSet(p.hand) || findExtraRun(p.hand);
+        if(extra){ layExtraMeld(idx, extra); progress = true; }
+      }
+    }
+  }
+  render();
+  if(p.hand.length===0){ setTimeout(()=>endRound(idx), 500); return; }
+  setTimeout(()=>botDiscard(idx), 700);
+}
+
+function botDiscard(idx){
+  const p = state.players[idx];
+  const contract = CONTRACTS[state.round];
+  const candidates = p.hand.filter(c=>!c.isJoker);
+  const pool = candidates.length>0 ? candidates : p.hand;
+  const stagnant = state.roundTurns - state.lastProgressTurn;
+  let best;
+  if(stagnant>25 && Math.random() < Math.min(0.6, stagnant/150)){
+    // Break out of any locally-stable trade cycle with a genuinely random discard.
+    best = pool[Math.floor(Math.random()*pool.length)];
+  } else {
+    let minUtil = Infinity;
+    for(const c of pool){ minUtil = Math.min(minUtil, cardUtility(p.hand, c, contract)); }
+    const worst = pool.filter(c=>cardUtility(p.hand, c, contract)===minUtil);
+    worst.sort((a,b)=>RANK_VALUE[b.rank]-RANK_VALUE[a.rank]);
+    const tiedTop = worst.filter(c=>RANK_VALUE[c.rank]===RANK_VALUE[worst[0].rank]);
+    best = tiedTop[Math.floor(Math.random()*tiedTop.length)];
+  }
+  discardCard(idx, best);
+}
+
+/* ============================== RENDER ============================== */
+function cardLabel(card){
+  return card.isJoker ? 'Curinga' : (card.rank + card.suit);
+}
+function suitClass(card){
+  return card.isJoker ? 'joker' : (card.color==='red' ? 'red' : 'black');
+}
+function cardHTML(card, opts){
+  opts = opts || {};
+  const cls = ['card', suitClass(card)];
+  if(opts.small) cls.push('card-sm');
+  if(opts.clickable) cls.push('clickable');
+  if(opts.selected) cls.push('selected');
+  if(opts.isNew) cls.push('new-draw');
+  if(opts.isPenalty) cls.push('penalty-draw');
+  if(card.isJoker){
+    return '<button type="button" class="'+cls.join(' ')+'" data-id="'+card.id+'"><span class="pip">🃏</span></button>';
+  }
+  const corner = card.rank + '<br>' + card.suit;
+  return '<button type="button" class="'+cls.join(' ')+'" data-id="'+card.id+'">'
+    + '<span class="corner tl">'+corner+'</span>'
+    + '<span class="pip">'+card.suit+'</span>'
+    + '<span class="corner br">'+corner+'</span>'
+    + '</button>';
+}
+function backCardSlotHTML(count){
+  if(count<=0) return '<div class="pile-empty">vazio</div>';
+  return '<div class="pile-deck" id="drawPileInner"><span>'+count+'</span></div>';
+}
+
+function isHumanTurn(){ return state.turn===0; }
+
+function renderPlaque(){
+  document.getElementById('roundNum').textContent = String(state.round+1);
+  document.getElementById('contractLabel').textContent = CONTRACTS[state.round].label;
+  const strip = document.getElementById('scoreStrip');
+  strip.innerHTML = state.players.map((p,i)=>{
+    const meta = PLAYER_META[i];
+    const isTurn = state.turn===i && state.phase!=='round-over';
+    return '<div class="score-pill '+(p.isHuman?'you':'')+' '+(isTurn?'turn':'')+'">'
+      + '<span class="dot" style="background:'+meta.accent+'"></span>'
+      + '<span>'+p.name+'</span><b>'+p.totalScore+'</b>'
+      + '</div>';
+  }).join('');
+}
+
+const SET_SIZE_NAMES = {3:'Trinca', 4:'Quadra', 5:'Quina'};
+function meldLabel(meld){
+  if(meld.type==='run') return meld.cards.length + ' em sequência';
+  return SET_SIZE_NAMES[meld.cards.length] || (meld.cards.length + ' do mesmo número');
+}
+function meldChipHTML(meld, idxInOwner, clickable){
+  const label = meldLabel(meld);
+  const cardsHTML = meld.cards.map(c=>cardHTML(c,{small:true})).join('');
+  return '<div class="meld-chip'+(clickable?' clickable':'')+'" data-meld-owner="'+meld.owner+'" data-meld-idx="'+idxInOwner+'">'
+    + '<span class="meld-label">'+label+'</span>'
+    + cardsHTML
+    + '</div>';
+}
+
+function renderSeats(){
+  for(let i=1;i<=3;i++){
+    const p = state.players[i];
+    const meta = PLAYER_META[i];
+    const avatarEl = document.getElementById('avatar-'+i);
+    avatarEl.textContent = p.name[0];
+    avatarEl.style.background = meta.accent;
+    avatarEl.dataset.count = p.hand.length;
+    document.getElementById('name-'+i).textContent = p.name;
+    document.getElementById('count-'+i).textContent = p.hand.length + ' cartas';
+    document.getElementById('score-'+i).textContent = 'Total: ' + p.totalScore + ' tentos · 🎫 ' + p.tentosLeft + '/' + TENTOS_BUDGET;
+    document.getElementById('status-'+i).textContent =
+      (state.phase==='bot-turn' && state.turn===i) ? 'pensando…' :
+      (p.laidDown ? 'jogo descido' : '');
+    document.getElementById('seat-'+i).classList.toggle('active', state.turn===i && state.phase!=='round-over');
+    const addEligible = state.selected.size===1 && isHumanTurn() && state.players[0].laidDown && state.phase==='await-action';
+    document.getElementById('melds-'+i).innerHTML = p.melds.map((m,mi)=>meldChipHTML(m,mi,addEligible)).join('');
+  }
+}
+
+function renderCenter(){
+  const dp = document.getElementById('drawPile');
+  const humanCanDraw = isHumanTurn() && state.phase==='await-draw';
+  dp.innerHTML = state.drawPile.length>0
+    ? '<div class="pile-deck'+(humanCanDraw?' clickable':'')+'" id="drawPileInner"><span>'+state.drawPile.length+'</span></div>'
+    : '<div class="pile-empty">vazio</div>';
+
+  const disc = document.getElementById('discardPile');
+  const top = state.discardPile[state.discardPile.length-1];
+  if(top){
+    disc.innerHTML = cardHTML(top, {clickable:humanCanDraw});
+  } else {
+    disc.innerHTML = '<div class="pile-empty">vazio</div>';
+  }
+  const hint = document.getElementById('outOfTurnHint');
+  const myTentos = state.players[0].tentosLeft;
+  if(!humanCanDraw){
+    hint.textContent = '';
+  } else if(myTentos>0){
+    hint.textContent = '💰 Comprar aqui gasta 1 tento (restam ' + myTentos + '/' + TENTOS_BUDGET + ') e vem com +3 cartas do monte';
+  } else {
+    hint.textContent = '🚫 Sem tentos — só dá pra comprar do monte fechado';
+  }
+
+  const ti = document.getElementById('turnIndicator');
+  if(state.phase==='round-over'){
+    ti.textContent = 'Rodada encerrada.';
+  } else if(isHumanTurn()){
+    ti.textContent = state.phase==='await-draw' ? 'Sua vez — compre uma carta' : 'Sua vez — jogue e descarte';
+  } else {
+    ti.textContent = state.players[state.turn].name + ' está jogando' ;
+    ti.classList.add('dots');
+  }
+  if(isHumanTurn() || state.phase==='round-over') ti.classList.remove('dots');
+}
+
+function sortedHand(hand){
+  const copy = hand.slice();
+  if(state.sortMode==='suit'){
+    copy.sort((a,b)=>{
+      if(a.isJoker !== b.isJoker) return a.isJoker ? 1 : -1;
+      if(a.isJoker) return 0;
+      const suitOrder = SUITS.findIndex(s=>s.sym===a.suit) - SUITS.findIndex(s=>s.sym===b.suit);
+      if(suitOrder!==0) return suitOrder;
+      return RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank);
+    });
+  } else {
+    copy.sort((a,b)=>{
+      if(a.isJoker !== b.isJoker) return a.isJoker ? 1 : -1;
+      if(a.isJoker) return 0;
+      const rankOrder = RANKS.indexOf(a.rank) - RANKS.indexOf(b.rank);
+      if(rankOrder!==0) return rankOrder;
+      return SUITS.findIndex(s=>s.sym===a.suit) - SUITS.findIndex(s=>s.sym===b.suit);
+    });
+  }
+  return copy;
+}
+
+// If the player has manually dragged cards into a custom order, honor it —
+// any card no longer in hand (discarded/melded) is dropped, and any card not
+// yet placed (freshly drawn) is appended at the end via the auto-sort.
+function getDisplayHand(hand){
+  if(!state.handOrder || state.handOrder.length===0) return sortedHand(hand);
+  const byId = new Map(hand.map(c=>[c.id,c]));
+  const ordered = [];
+  for(const id of state.handOrder){
+    if(byId.has(id)){ ordered.push(byId.get(id)); byId.delete(id); }
+  }
+  return ordered.concat(sortedHand(Array.from(byId.values())));
+}
+
+function renderFooter(){
+  const p = state.players[0];
+  document.getElementById('handInfo').innerHTML = 'Sua mão — <b>'+p.hand.length+'</b> cartas · total <b>'+p.totalScore+'</b> tentos · 🎫 <b>'+p.tentosLeft+'</b>/'+TENTOS_BUDGET+' para comprar';
+  document.getElementById('btnSort').textContent = 'Ordenar por ' + (state.sortMode==='suit' ? 'valor' : 'naipe');
+
+  const addEligible = state.selected.size===1 && isHumanTurn() && p.laidDown && state.phase==='await-action';
+  document.getElementById('melds-0').innerHTML = p.melds.map((m,mi)=>meldChipHTML(m,mi,addEligible)).join('');
+
+  const fan = document.getElementById('handFan');
+  const interactive = isHumanTurn() && state.phase==='await-action';
+  fan.innerHTML = getDisplayHand(p.hand).map(c=>cardHTML(c,{
+    clickable: interactive,
+    selected: state.selected.has(c.id),
+    isNew: state.lastDrawnIds.has(c.id),
+  })).join('');
+  if(state.lastDrawnIds.size>0){
+    const firstId = state.lastDrawnIds.values().next().value;
+    const newEl = fan.querySelector('[data-id="'+firstId+'"]');
+    if(newEl) newEl.scrollIntoView({inline:'center', block:'nearest'});
+  }
+
+  const canAct = isHumanTurn() && state.phase==='await-action';
+  const contract = CONTRACTS[state.round];
+  const needed = contract.groups.reduce((sum,g)=>sum+g.size, 0);
+  document.getElementById('btnBaixar').textContent = p.laidDown ? 'Baixar jogo extra' : 'Descer jogo';
+  document.getElementById('btnAjuda').textContent = p.laidDown ? 'Sugerir jogo extra' : 'Sugerir descida';
+  document.getElementById('btnBaixar').disabled = !canAct;
+  document.getElementById('btnAjuda').disabled = !canAct;
+  document.getElementById('btnDescartar').disabled = !(canAct && state.selected.size===1);
+
+  const hint = document.getElementById('hintText');
+  const newCardNote = state.lastDrawnIds.size>0 ? ' As cartas com etiqueta dourada "nova" foram as que você acabou de comprar.' : '';
+  if(!canAct){
+    hint.textContent = '';
+  } else if(!p.laidDown){
+    hint.textContent = 'Selecione '+needed+' cartas para descer ('+contract.short+'), ou "Sugerir descida" para eu procurar por você.' + newCardNote;
+  } else if(addEligible){
+    hint.textContent = 'Clique em um jogo na mesa para encaixar essa carta, ou selecione 3+ cartas do mesmo número (ou 7 em sequência) para baixar um jogo extra.';
+  } else {
+    hint.textContent = 'Selecione 1 carta para encaixar ou descartar, ou 3+ do mesmo número para baixar um jogo extra.' + newCardNote;
+  }
+}
+
+function render(){
+  renderPlaque();
+  renderSeats();
+  renderCenter();
+  renderFooter();
+}
+
+/* ============================== LOG / TOAST / MODAL ============================== */
+function logMsg(text){
+  state.log.push(text);
+  const body = document.getElementById('logBody');
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  div.textContent = text;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+let toastTimer = null;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function showModal(html){
+  document.getElementById('modal').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function hideModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function showRoundSummary(winnerIdx){
+  const rows = state.players.slice().sort((a,b)=>a.roundScore-b.roundScore)
+    .map(p=>'<tr><td>'+p.name+(p.id===0?' (você)':'')+'</td><td>'+(p.id===winnerIdx?'bateu':'+'+p.roundScore)+'</td><td>'+p.totalScore+'</td></tr>')
+    .join('');
+  const isLast = state.round >= CONTRACTS.length-1;
+  showModal(
+    '<h2>Fim da rodada '+(state.round+1)+'</h2>'
+    + '<p>'+CONTRACTS[state.round].label+(winnerIdx!==null ? (' — ' + state.players[winnerIdx].name + ' bateu primeiro.') : ' — ninguém bateu; cartas esgotadas.')+'</p>'
+    + '<table><tr><th>Jogador</th><th>Tentos na rodada</th><th>Total</th></tr>'+rows+'</table>'
+    + '<div class="modal-actions"><button class="act-btn primary" id="btnNextRound">'+(isLast?'Ver resultado final':'Próxima rodada')+'</button></div>'
+  );
+  document.getElementById('btnNextRound').addEventListener('click', goToNextRound);
+}
+
+function showFinalResults(){
+  const ranked = state.players.slice().sort((a,b)=>a.totalScore-b.totalScore);
+  const rows = ranked.map((p,i)=>'<li class="'+(i===0?'current':'')+'"><span>'+(i+1)+'º — '+p.name+(p.id===0?' (você)':'')+'</span><span>'+p.totalScore+' tentos</span></li>').join('');
+  showModal(
+    '<h2>🏆 Resultado final</h2>'
+    + '<p>Fim das 6 rodadas. Vence quem somou menos tentos.</p>'
+    + '<ul class="modal-list">'+rows+'</ul>'
+    + '<div class="modal-actions"><button class="act-btn primary" id="btnPlayAgain">Jogar novamente</button></div>'
+  );
+  document.getElementById('btnPlayAgain').addEventListener('click', ()=>{ hideModal(); initGame(); });
+}
+
+function showRules(){
+  const rows = CONTRACTS.map((c,i)=>'<li class="'+(i===state.round?'current':'')+'"><span>Rodada '+(i+1)+'</span><span>'+c.label+'</span></li>').join('');
+  showModal(
+    '<h2>Regras — Fuck Fuck</h2>'
+    + '<p>Cada jogador recebe 12 cartas. Em cada uma das 6 rodadas existe um jogo obrigatório — grupos de cartas do <b>mesmo número</b> (trinca, quadra, quina), exceto a última rodada, que pede uma <b>canastra</b> (sequência de 7 cartas do mesmo naipe). Curinga substitui qualquer carta. O jogo precisa ser descido por inteiro, de uma vez. Depois de descer, você pode encaixar cartas em jogos na mesa (seus ou dos outros) ou baixar jogos extras (3+ cartas do mesmo número, ou outra sequência de 7) para se livrar da mão mais rápido.</p>'
+    + '<ul class="modal-list">'+rows+'</ul>'
+    + '<p><b>Como comprar:</b> na sua vez, escolha entre o Monte fechado (1 carta grátis e aleatória) ou o Descarte (você escolhe a carta, mas gasta <b>1 ficha de tento</b> e é obrigado a puxar mais <b>3 cartas aleatórias</b> do monte — 4 cartas ao todo). Depois, descarte só 1 carta — sua mão cresce em 3 cartas líquidas. Cada jogador começa a partida com <b>'+TENTOS_BUDGET+' fichas de tento</b> para gastar nas 6 rodadas inteiras — elas não se renovam, e sem fichas só dá pra comprar do monte fechado. Não existe compra fora da vez: só quem está jogando pode comprar do descarte.</p>'
+    + '<p>Depois de descer, você pode encaixar cartas em jogos abertos na mesa — de qualquer jogador que também já tenha descido — desde que sejam compatíveis: outro 8 numa trinca 8-8-8 vira quadra, e num canastra 4♥-10♥ dá pra encaixar o 3♥ antes ou o J♥ depois. Só é permitido encaixar depois que você mesmo já desceu.</p>'
+    + '<p>A rodada termina quando alguém fica sem cartas (bate) e recebe 0 pontos na rodada, não importa quantas cartas tenha comprado antes. Os demais somam os <b>tentos</b> das cartas que sobraram na mão: 2 a 10 valem o próprio número, J/Q/K valem 10, Ás vale 15, e Curinga vale 20. Depois das 6 rodadas, vence quem tiver <span class="rank1">menos tentos</span>.</p>'
+    + '<div class="modal-actions"><button class="act-btn primary" id="btnCloseRules">Entendi</button></div>'
+  );
+  document.getElementById('btnCloseRules').addEventListener('click', hideModal);
+}
+
+/* ============================== GUIDED TUTORIAL ============================== */
+// Points a floating panel at the real, live table elements (via a CSS
+// box-shadow "spotlight") instead of a static wall of text, so first-time
+// players see exactly where the draw pile, contract button, etc. actually are.
+const TUTORIAL_STEPS = [
+  { title:'Bem-vindo à mesa!', selector:null,
+    body:'Você vai jogar Fuck Fuck contra 3 bots: Zé, Marisa e Beto. Em cada uma das 6 rodadas existe um jogo obrigatório — grupos de cartas do mesmo número (trinca, quadra, quina) e, na última rodada, uma canastra (sequência de 7). Vamos dar um tour rápido pela mesa.' },
+  { title:'Sua mão', selector:'#handFan',
+    body:'Suas 12 cartas ficam aqui embaixo. Clique em uma carta para selecioná-la (ela sobe e fica com um contorno dourado) — é assim que você escolhe cartas para descer, encaixar ou descartar. Você também pode arrastar as cartas para reorganizá-las do seu jeito, a qualquer momento — a ordem fica salva até o fim da rodada.' },
+  { title:'Comprar uma carta', selector:'.piles',
+    body:'Na sua vez, o Monte fechado dá 1 carta grátis e aleatória. Já o Descarte deixa você escolher a carta, mas gasta 1 ficha de tento e vem "no pacote": você recebe também 3 cartas aleatórias do monte — 4 cartas de uma vez. Você começa a partida com apenas '+TENTOS_BUDGET+' fichas para as 6 rodadas inteiras, e elas não voltam — use com cuidado. As cartas novas ganham uma etiqueta dourada na sua mão.' },
+  { title:'Descer o jogo', selector:'#btnBaixar',
+    body:'Depois de comprar, se suas cartas selecionadas formarem exatamente o jogo da rodada (mostrado no topo da mesa), clique aqui para descê-lo. Não sabe montar? Use o botão "Sugerir descida" ao lado, que procura a combinação por você.' },
+  { title:'Encaixar ou baixar jogo extra', selector:'#melds-0',
+    body:'Depois de descer, seu jogo aparece aqui embaixo. Em turnos seguintes você tem duas formas de se livrar do resto da mão: selecione 1 carta e clique num jogo na mesa (seu ou dos adversários) para encaixá-la ali, ou selecione 3+ cartas do mesmo número (ou outros 7 em sequência) e clique em "Baixar jogo extra".' },
+  { title:'Descartar', selector:'#btnDescartar',
+    body:'Para terminar seu turno, selecione 1 carta e clique em "Descartar carta" — só 1 carta, mesmo que sua mão tenha crescido comprando do descarte. Quem ficar sem cartas primeiro vence a rodada na hora (bateu).' },
+  { title:'Pontuação em tentos', selector:'.score-strip',
+    body:'Quem bate faz 0 pontos na rodada, não importa quantas cartas tenha comprado antes; os outros somam o valor das cartas que sobraram na mão (2-10 = valor da carta, J/Q/K = 10, Ás = 15, Curinga = 20). Isso é diferente das fichas de tento que você gasta comprando do descarte — comprar demais deixa mais cartas na mão, o que pesa se alguém bater antes de você. Depois das 6 rodadas, vence quem somar menos pontos no total.' },
+  { title:'Pronto para jogar!', selector:null,
+    body:'É isso! Você pode reabrir este tutorial a qualquer momento pelo botão "Tutorial" no topo, ou consultar "Regras" para os detalhes completos. Boa sorte na mesa!' },
+];
+let tutorialIndex = 0;
+let tutorialSpotlightEl = null;
+
+function clearTutorialSpotlight(){
+  if(tutorialSpotlightEl){ tutorialSpotlightEl.classList.remove('tutorial-spotlight'); tutorialSpotlightEl = null; }
+}
+function renderTutorialStep(){
+  clearTutorialSpotlight();
+  const step = TUTORIAL_STEPS[tutorialIndex];
+  document.getElementById('tutorialTitle').textContent = step.title;
+  document.getElementById('tutorialBody').textContent = step.body;
+  document.getElementById('tutorialProgress').innerHTML = TUTORIAL_STEPS
+    .map((_,i)=>'<span class="'+(i===tutorialIndex?'on':'')+'"></span>').join('');
+  document.getElementById('tutorialPrev').disabled = tutorialIndex===0;
+  document.getElementById('tutorialNext').textContent = tutorialIndex===TUTORIAL_STEPS.length-1 ? 'Concluir' : 'Avançar';
+  if(step.selector){
+    const el = document.querySelector(step.selector);
+    if(el){
+      el.classList.add('tutorial-spotlight');
+      tutorialSpotlightEl = el;
+      el.scrollIntoView({block:'center', inline:'center'});
+    }
+  }
+}
+function startTutorial(){
+  tutorialIndex = 0;
+  document.getElementById('tutorialPanel').classList.add('show');
+  renderTutorialStep();
+}
+function endTutorial(){
+  clearTutorialSpotlight();
+  document.getElementById('tutorialPanel').classList.remove('show');
+  try{ localStorage.setItem('fuckfuck_tutorial_seen', '1'); }catch(err){ /* storage unavailable, ignore */ }
+}
+
+/* ============================== EVENT WIRING ============================== */
+document.getElementById('btnRules').addEventListener('click', showRules);
+document.getElementById('btnNewGame').addEventListener('click', ()=>{ hideModal(); initGame(); });
+document.getElementById('modalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='modalOverlay') hideModal(); });
+
+document.getElementById('btnTutorial').addEventListener('click', startTutorial);
+document.getElementById('tutorialNext').addEventListener('click', ()=>{
+  if(tutorialIndex >= TUTORIAL_STEPS.length-1){ endTutorial(); return; }
+  tutorialIndex++;
+  renderTutorialStep();
+});
+document.getElementById('tutorialPrev').addEventListener('click', ()=>{
+  if(tutorialIndex===0) return;
+  tutorialIndex--;
+  renderTutorialStep();
+});
+document.getElementById('tutorialSkip').addEventListener('click', endTutorial);
+
+document.getElementById('btnSort').addEventListener('click', ()=>{
+  state.sortMode = state.sortMode==='suit' ? 'rank' : 'suit';
+  state.handOrder = null;
+  render();
+});
+
+document.getElementById('drawPile').addEventListener('click', (e)=>{
+  if(!(isHumanTurn() && state.phase==='await-draw')) return;
+  if(!e.target.closest('#drawPileInner')) return;
+  const p = state.players[0];
+  if(!drawCard(0,'deck')){
+    if(!ensureDrawPile()){ toast('Não há mais cartas para comprar.'); return; }
+    drawCard(0,'deck');
+  }
+  logMsg('Você comprou do monte.');
+  state.lastDrawnIds = new Set([p.hand[p.hand.length-1].id]);
+  state.phase = 'await-action';
+  render();
+});
+document.getElementById('discardPile').addEventListener('click', (e)=>{
+  if(!(isHumanTurn() && state.phase==='await-draw')) return;
+  if(state.discardPile.length===0) return;
+  if(!canBuyFromDiscard(0)){ toast('Você não tem mais tentos — só pode comprar do monte fechado.'); return; }
+  const top = state.discardPile[state.discardPile.length-1];
+  const label = cardLabel(top);
+  drawFromDiscardWithPenalty(0);
+  toast('Comprou ' + label + ' + 3 do monte — gastou 1 tento.');
+  state.phase = 'await-action';
+  render();
+});
+
+document.getElementById('handFan').addEventListener('click', (e)=>{
+  if(justDragged){ justDragged = false; return; }
+  const btn = e.target.closest('.card[data-id]');
+  if(!btn) return;
+  if(!(isHumanTurn() && state.phase==='await-action')) return;
+  const id = btn.dataset.id;
+  if(state.selected.has(id)) state.selected.delete(id);
+  else state.selected.add(id);
+  render();
+});
+
+/* ---- Drag to manually reorder your hand (works anytime, even off-turn) ----
+   Mouse/pen: dragging starts as soon as the pointer moves a few pixels — a
+   mouse drag never conflicts with scrolling. Touch: the hand-fan also needs
+   to scroll horizontally, which is the same gesture as a reorder drag, so we
+   wait for a brief hold (no real movement) before claiming the gesture; a
+   quick swipe never triggers the timer and scrolls the fan normally. */
+let dragInfo = null;
+let justDragged = false;
+let longPressTimer = null;
+const LONG_PRESS_MS = 260;
+const MOVE_CANCEL_PX = 10;
+const handFanEl = document.getElementById('handFan');
+
+function activateDrag(){
+  dragInfo.pending = false;
+  dragInfo.active = true;
+  dragInfo.moved = true;
+  dragInfo.el.style.touchAction = 'none';
+  dragInfo.el.classList.add('card-dragging');
+}
+
+handFanEl.addEventListener('pointerdown', (e)=>{
+  const btn = e.target.closest('.card[data-id]');
+  if(!btn) return;
+  try{ btn.setPointerCapture(e.pointerId); }catch(err){ /* ignore — capture is a reliability nicety, not required */ }
+  const isTouch = e.pointerType==='touch';
+  dragInfo = {
+    id: btn.dataset.id, el: btn, pointerId: e.pointerId,
+    startX: e.clientX, startY: e.clientY,
+    moved: false, active: false, pending: isTouch,
+  };
+  if(isTouch){
+    longPressTimer = setTimeout(()=>{
+      if(dragInfo && dragInfo.pointerId===e.pointerId && dragInfo.pending) activateDrag();
+    }, LONG_PRESS_MS);
+  }
+});
+handFanEl.addEventListener('pointermove', (e)=>{
+  if(!dragInfo || dragInfo.pointerId!==e.pointerId) return;
+  const dx = e.clientX - dragInfo.startX;
+  const dy = e.clientY - dragInfo.startY;
+  if(dragInfo.pending){
+    // Waiting to see if this is a hold (drag) or a swipe (scroll). Real
+    // movement before the timer fires means "let it scroll" — bail out
+    // without ever touching touch-action, so native panning stays intact.
+    if(Math.abs(dx) > MOVE_CANCEL_PX || Math.abs(dy) > MOVE_CANCEL_PX){
+      clearTimeout(longPressTimer);
+      dragInfo = null;
+    }
+    return;
+  }
+  if(!dragInfo.active){
+    if(Math.abs(dx) <= 6) return;
+    dragInfo.active = true;
+    dragInfo.moved = true;
+    dragInfo.el.classList.add('card-dragging');
+  }
+  dragInfo.el.style.transform = 'translateX('+dx+'px) translateY(-14px) scale(1.06)';
+});
+function endHandDrag(e){
+  clearTimeout(longPressTimer);
+  if(!dragInfo || dragInfo.pointerId!==e.pointerId) return;
+  const info = dragInfo;
+  dragInfo = null;
+  info.el.classList.remove('card-dragging');
+  info.el.style.transform = '';
+  info.el.style.touchAction = '';
+  if(!info.moved) return;
+  justDragged = true;
+  const siblings = Array.from(handFanEl.querySelectorAll('.card[data-id]')).filter(el=>el.dataset.id!==info.id);
+  let dropIndex = siblings.length;
+  for(let i=0;i<siblings.length;i++){
+    const r = siblings[i].getBoundingClientRect();
+    if(e.clientX < r.left + r.width/2){ dropIndex = i; break; }
+  }
+  const p = state.players[0];
+  const order = getDisplayHand(p.hand).map(c=>c.id);
+  const fromIdx = order.indexOf(info.id);
+  if(fromIdx!==-1) order.splice(fromIdx,1);
+  order.splice(dropIndex, 0, info.id);
+  state.handOrder = order;
+  render();
+}
+handFanEl.addEventListener('pointerup', endHandDrag);
+handFanEl.addEventListener('pointercancel', endHandDrag);
+
+function meldZoneClickHandler(e){
+  const chip = e.target.closest('.meld-chip.clickable');
+  if(!chip) return;
+  if(!(isHumanTurn() && state.phase==='await-action')) return;
+  if(state.selected.size!==1) return;
+  const p = state.players[0];
+  if(!p.laidDown) return;
+  const ownerIdx = Number(chip.dataset.meldOwner);
+  const meldIdx = Number(chip.dataset.meldIdx);
+  const owner = state.players[ownerIdx];
+  const meld = owner.melds[meldIdx];
+  const cardId = Array.from(state.selected)[0];
+  const card = p.hand.find(c=>c.id===cardId);
+  if(!card) return;
+  const ok = addCardToMeld(0, card, meld);
+  if(!ok){ toast('Essa carta não encaixa nesse jogo.'); return; }
+  state.selected.clear();
+  state.lastDrawnIds.delete(card.id);
+  if(p.hand.length===0){ endRound(0); return; }
+  render();
+}
+for(let i=0;i<=3;i++){
+  document.getElementById('melds-'+i).addEventListener('click', meldZoneClickHandler);
+}
+
+document.getElementById('btnBaixar').addEventListener('click', ()=>{
+  const p = state.players[0];
+  const cards = Array.from(state.selected).map(id=>p.hand.find(c=>c.id===id)).filter(Boolean);
+  let ok;
+  if(!p.laidDown){
+    const contract = CONTRACTS[state.round];
+    const needed = contract.groups.reduce((sum,g)=>sum+g.size, 0);
+    if(cards.length!==needed){ toast('Selecione exatamente '+needed+' cartas para este jogo.'); return; }
+    ok = layDownContract(0, cards);
+    if(!ok){ toast('Essa seleção não forma o jogo exigido.'); return; }
+  } else {
+    if(cards.length<3){ toast('Selecione pelo menos 3 cartas do mesmo número (ou 7 em sequência) para um jogo extra.'); return; }
+    ok = layExtraMeld(0, cards);
+    if(!ok){ toast('Essa seleção não forma um jogo válido.'); return; }
+  }
+  state.selected.clear();
+  for(const c of cards) state.lastDrawnIds.delete(c.id);
+  if(p.hand.length===0){ endRound(0); return; }
+  render();
+});
+
+document.getElementById('btnAjuda').addEventListener('click', ()=>{
+  const p = state.players[0];
+  const contract = CONTRACTS[state.round];
+  if(!p.laidDown){
+    const result = tryPartition(p.hand, contract.groups);
+    if(!result){ toast('Nenhuma combinação encontrada na sua mão ainda.'); return; }
+    const chosen = [].concat(...result.map(g=>g.cards));
+    state.selected = new Set(chosen.map(c=>c.id));
+    toast('Seleção sugerida — clique em "Descer jogo".');
+  } else {
+    const extra = findExtraSet(p.hand) || findExtraRun(p.hand);
+    if(!extra){ toast('Nenhum jogo extra encontrado na sua mão ainda.'); return; }
+    state.selected = new Set(extra.map(c=>c.id));
+    toast('Jogo extra sugerido — clique em "Baixar jogo extra".');
+  }
+  render();
+});
+
+document.getElementById('btnDescartar').addEventListener('click', ()=>{
+  const p = state.players[0];
+  if(state.selected.size!==1) return;
+  const id = Array.from(state.selected)[0];
+  const card = p.hand.find(c=>c.id===id);
+  if(!card) return;
+  state.selected.clear();
+  discardCard(0, card);
+});
+
+document.getElementById('logToggle').addEventListener('click', ()=>{
+  const d = document.getElementById('logDrawer');
+  d.classList.toggle('open');
+  document.getElementById('logChevron').textContent = d.classList.contains('open') ? '▴' : '▾';
+});
+
+/* ============================== BOOT ============================== */
+initGame();
+let tutorialAlreadySeen = false;
+try{ tutorialAlreadySeen = localStorage.getItem('fuckfuck_tutorial_seen')==='1'; }catch(err){ /* storage unavailable, ignore */ }
+if(!tutorialAlreadySeen) setTimeout(startTutorial, 700);
+</script>
