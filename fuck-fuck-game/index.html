@@ -994,12 +994,30 @@ function discardCard(playerIdx, card){
   nextTurn();
 }
 
+// Can the monte still yield a card, either directly or by reshuffling the
+// discard pile (which needs at least 2 discarded cards — 1 stays behind as
+// the new discard top)? Bots already check this via drawCard's internal
+// ensureDrawPile() and bail out to forceEndRoundByExhaustion() when it
+// fails — but nothing did the equivalent for the human. When it was your
+// turn and the monte truly had nothing left, the "vazio" placeholder has
+// no #drawPileInner to click, so the draw pile click handler never fired
+// and the game sat there forever waiting for an action that could never
+// come. Checking this proactively when a human's draw turn begins closes
+// that dead end the same way bots already avoid it.
+function canDrawFromMonte(){
+  return state.drawPile.length>0 || state.discardPile.length>1;
+}
+
 function nextTurn(){
   state.turn = (state.turn+1)%4;
   state.roundTurns++;
   state.selected.clear();
   state.focusedMeld = null;
   state.phase = 'await-draw';
+  if(state.players[state.turn].isHuman && !canDrawFromMonte()){
+    forceEndRoundByExhaustion();
+    return;
+  }
   render();
   if(!state.players[state.turn].isHuman) setTimeout(botTurn, 900);
 }
