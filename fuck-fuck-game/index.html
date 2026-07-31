@@ -684,7 +684,9 @@ const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const RANK_VALUE = {A:15,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:10,Q:10,K:10};
 const JOKER_VALUE = 20;
 const SET_SIZE = 3;   // menor grupo de mesmo número que pode existir (trinca)
-const RUN_SIZE = 7;   // única sequência do jogo é a canastra de 7
+const RUN_SIZE = 7;   // tamanho exigido pela canastra (o jogo obrigatório da rodada 6)
+const EXTRA_RUN_MIN = 3; // tamanho mínimo de uma sequência "extra" (só depois de já ter cumprido o jogo obrigatório da rodada)
+const MAX_JOKERS_PER_MELD = 1;
 const TENTOS_BUDGET = 7; // fichas por jogador para comprar do descarte na partida toda — não se renovam
 
 const CONTRACTS = [
@@ -786,14 +788,21 @@ function analyzeGroup(cards){
   const n = cards.length;
   const jokers = cards.filter(c=>c.isJoker);
   const normal = cards.filter(c=>!c.isJoker);
+  // At most 1 joker per meld — a group leaning on 2+ wild cards isn't a
+  // valid trinca/quadra/quina/canastra no matter how the rest lines up.
+  if(jokers.length>MAX_JOKERS_PER_MELD) return {canSet:false, canRun:false};
   let canSet=false, canRun=false;
   if(normal.length===0){
-    return {canSet:n>=SET_SIZE, canRun:n>=RUN_SIZE};
+    return {canSet:n>=SET_SIZE, canRun:n>=EXTRA_RUN_MIN};
   }
   const ranks = new Set(normal.map(c=>c.rank));
   if(ranks.size===1 && n>=SET_SIZE) canSet = true;
   const suits = new Set(normal.map(c=>c.suit));
-  if(suits.size===1 && n>=RUN_SIZE){
+  // n>=EXTRA_RUN_MIN, not RUN_SIZE: this just asks "could this specific
+  // group of cards be read as a run" — the exact size a run must be (7 for
+  // the round-6 contract, 3+ for a voluntary extra meld) is enforced by
+  // whoever calls findGroupsOfSize with the size they actually need.
+  if(suits.size===1 && n>=EXTRA_RUN_MIN){
     const idxs = normal.map(c=>RANKS.indexOf(c.rank));
     if(new Set(idxs).size === idxs.length){
       const minI = Math.min(...idxs), maxI = Math.max(...idxs);
@@ -803,7 +812,6 @@ function analyzeGroup(cards){
       if(sFrom <= sTo) canRun = true;
     }
   }
-  void jokers;
   return {canSet, canRun};
 }
 
@@ -970,9 +978,18 @@ function findExtraSet(hand){
   const combos = findGroupsOfSize(hand, 3, true);
   return combos.length>0 ? combos[0].map(i=>hand[i]) : null;
 }
+// Extra runs (voluntary sequences, only after the round's required contract
+// is already met) need at least EXTRA_RUN_MIN cards — not the full 7-card
+// canastra size that only the round-6 contract itself requires. Search from
+// the smallest valid size up; a cap on the size tried keeps this cheap on
+// large hands (a longer run would already surface at its shorter prefix).
 function findExtraRun(hand){
-  const combos = findGroupsOfSize(hand, RUN_SIZE, false);
-  return combos.length>0 ? combos[0].map(i=>hand[i]) : null;
+  const maxTry = Math.min(hand.length, 10);
+  for(let size=EXTRA_RUN_MIN; size<=maxTry; size++){
+    const combos = findGroupsOfSize(hand, size, false);
+    if(combos.length>0) return combos[0].map(i=>hand[i]);
+  }
+  return null;
 }
 
 function discardCard(playerIdx, card){
@@ -1427,7 +1444,7 @@ function renderFooter(){
       hint.textContent = 'Descartar essa carta, ou toque num avatar (ou em "🃏 jogos") para encaixá-la.';
     } else {
       btnAjuda.hidden = false; btnAjuda.textContent = 'Sugerir jogo extra';
-      hint.textContent = 'Toque num avatar pra encaixar, selecione 1 carta pra descartar, ou 3+ do mesmo número (ou 7 em sequência) pra jogo extra.' + newCardNote;
+      hint.textContent = 'Toque num avatar pra encaixar, selecione 1 carta pra descartar, ou 3+ do mesmo número (ou em sequência do mesmo naipe) pra jogo extra.' + newCardNote;
     }
   }
 }
@@ -1543,7 +1560,7 @@ function showRules(){
   const rows = CONTRACTS.map((c,i)=>'<li class="'+(i===state.round?'current':'')+'"><span>Rodada '+(i+1)+'</span><span>'+c.label+'</span></li>').join('');
   showModal(
     '<h2>Regras — Fuck Fuck</h2>'
-    + '<p>Cada jogador recebe 12 cartas. Em cada uma das 6 rodadas existe um jogo obrigatório — grupos de cartas do <b>mesmo número</b> (trinca, quadra, quina), exceto a última rodada, que pede uma <b>canastra</b> (sequência de 7 cartas do mesmo naipe). Curinga substitui qualquer carta. O jogo precisa ser descido por inteiro, de uma vez. Depois de descer, você pode encaixar cartas em jogos na mesa (seus ou dos outros) ou baixar jogos extras (3+ cartas do mesmo número, ou outra sequência de 7) para se livrar da mão mais rápido.</p>'
+    + '<p>Cada jogador recebe 12 cartas. Em cada uma das 6 rodadas existe um jogo obrigatório — grupos de cartas do <b>mesmo número</b> (trinca, quadra, quina), exceto a última rodada, que pede uma <b>canastra</b> (sequência de 7 cartas do mesmo naipe). Curinga substitui qualquer carta, mas <b>no máximo 1 curinga por jogo</b>, seja trinca, quadra, quina ou canastra. O jogo obrigatório precisa ser descido por inteiro, de uma vez. Depois de descer, você pode encaixar cartas em jogos na mesa (seus ou dos outros) ou baixar jogos extras para se livrar da mão mais rápido: 3+ cartas do mesmo número, <b>ou uma sequência de 3+ cartas do mesmo naipe</b> — sequências só valem como jogo extra, depois que você já cumpriu o obrigatório da rodada.</p>'
     + '<ul class="modal-list">'+rows+'</ul>'
     + '<p><b>Como comprar:</b> na sua vez, escolha entre o Monte fechado (1 carta grátis e aleatória) ou o Descarte (você escolhe a carta, mas gasta <b>1 ficha de tento</b> e é obrigado a puxar mais <b>3 cartas aleatórias</b> do monte — 4 cartas ao todo). Depois, descarte só 1 carta — sua mão cresce em 3 cartas líquidas. Na <b>1ª rodada</b>, a <b>primeira</b> compra do descarte da rodada é uma exceção: é <b>grátis</b> e não vem com cartas extras do monte. Da segunda compra em diante — mesmo ainda na 1ª rodada — volta a regra normal. Cada jogador começa a partida com <b>'+TENTOS_BUDGET+' fichas de tento</b> para gastar — elas não se renovam, e sem fichas só dá pra comprar do monte fechado. Não existe compra fora da vez: só quem está jogando pode comprar do descarte.</p>'
     + '<p>Depois de descer, você pode encaixar cartas em jogos abertos na mesa — de qualquer jogador que também já tenha descido — desde que sejam compatíveis: outro 8 numa trinca 8-8-8 vira quadra, e num canastra 4♥-10♥ dá pra encaixar o 3♥ antes ou o J♥ depois. Só é permitido encaixar depois que você mesmo já desceu.</p>'
@@ -1567,7 +1584,7 @@ const TUTORIAL_STEPS = [
   { title:'Descer o jogo', selector:'#btnBaixar',
     body:'Depois de comprar, se suas cartas selecionadas formarem exatamente o jogo da rodada (mostrado no topo da mesa), clique aqui para descê-lo. Não sabe montar? Use o botão "Sugerir descida" ao lado, que procura a combinação por você.' },
   { title:'Encaixar ou baixar jogo extra', selector:'.table-wrap',
-    body:'Depois de descer, toque no avatar de um adversário (ou no botão "🃏 jogos" perto da sua mão) para ver os jogos dele e encaixar uma carta: escolha o jogo e as cartas da sua mão que servem ali ficam destacadas em verde — é só tocar numa delas. Ou selecione 3+ cartas do mesmo número (ou outros 7 em sequência) e clique em "Baixar jogo extra" para começar um jogo novo.' },
+    body:'Depois de descer, toque no avatar de um adversário (ou no botão "🃏 jogos" perto da sua mão) para ver os jogos dele e encaixar uma carta: escolha o jogo e as cartas da sua mão que servem ali ficam destacadas em verde — é só tocar numa delas. Ou selecione 3+ cartas do mesmo número, ou 3+ em sequência do mesmo naipe, e clique em "Baixar jogo extra" para começar um jogo novo.' },
   { title:'Descartar', selector:'#btnDescartar',
     body:'Para terminar seu turno, selecione 1 carta e clique em "Descartar carta" — só 1 carta, mesmo que sua mão tenha crescido comprando do descarte. Quem ficar sem cartas primeiro vence a rodada na hora (bateu).' },
   { title:'Pontuação em tentos', selector:'#btnPlacar',
@@ -1790,7 +1807,7 @@ document.getElementById('btnBaixar').addEventListener('click', ()=>{
     ok = layDownContract(0, cards);
     if(!ok){ toast('Essa seleção não forma o jogo exigido.'); return; }
   } else {
-    if(cards.length<3){ toast('Selecione pelo menos 3 cartas do mesmo número (ou 7 em sequência) para um jogo extra.'); return; }
+    if(cards.length<3){ toast('Selecione pelo menos 3 cartas do mesmo número, ou 3+ em sequência do mesmo naipe, para um jogo extra.'); return; }
     ok = layExtraMeld(0, cards);
     if(!ok){ toast('Essa seleção não forma um jogo válido.'); return; }
   }
