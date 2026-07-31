@@ -195,8 +195,8 @@ button{font-family:inherit;}
    with the real live count on the badge. Top row stays straight (no fan/
    arc); side seats stack vertically along the table edge. */
 .mini-hand{position:relative;}
-.mini-hand.top{width:96px; height:36px;}
-.mini-hand.side{width:32px; height:96px;}
+.mini-hand.top{width:124px; height:36px;}
+.mini-hand.side{width:32px; height:124px;}
 .mini-card{
   position:absolute;
   width:23px; height:32px;
@@ -1218,19 +1218,24 @@ function meldChipHTML(meld, idxInOwner, clickable){
 // arc); side seats stack them vertically (rotated via CSS to lie along the
 // table edge).
 function miniHandHTML(count, vertical){
-  const n = Math.min(count, 6);
+  // Every card is rendered — no cap — so the fan genuinely tracks the real
+  // count live instead of freezing once a capped max is reached. Cards
+  // overlap more tightly as the hand grows, spread across a fixed span
+  // instead of a fixed per-card gap, so a 20-card hand still fits.
+  const maxSpan = 100;
+  const step = count>1 ? Math.min(vertical?15:13, maxSpan/(count-1)) : 0;
   let html = '';
   let lastOffset = 0;
-  for(let i=0;i<n;i++){
-    const offset = i * (vertical ? 15 : 13);
+  for(let i=0;i<count;i++){
+    const offset = i * step;
     lastOffset = offset;
     html += '<div class="mini-card" style="' + (vertical ? 'top' : 'left') + ':' + offset + 'px;"></div>';
   }
   // Anchor the badge to the last rendered card instead of the container's
   // fixed box, or it floats disconnected below a hand with only a few cards.
   const badgePos = vertical
-    ? 'top:' + (lastOffset + (n>0?20:0)) + 'px; right:-9px;'
-    : 'left:' + (lastOffset + (n>0?14:0)) + 'px; top:-6px;';
+    ? 'top:' + (lastOffset + (count>0?20:0)) + 'px; right:-9px;'
+    : 'left:' + (lastOffset + (count>0?14:0)) + 'px; top:-6px;';
   html += '<div class="count-pill" style="' + badgePos + '">' + count + '</div>';
   return html;
 }
