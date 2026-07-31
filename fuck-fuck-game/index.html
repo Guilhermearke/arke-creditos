@@ -162,6 +162,7 @@ button{font-family:inherit;}
   transition:background .2s ease;
 }
 .seat:hover{background:rgba(255,255,255,.08);}
+.seat.has-melds .avatar{box-shadow:0 0 0 2px var(--success);}
 .seat.active .avatar{box-shadow:0 0 0 2px var(--gold-400), 0 0 14px rgba(201,162,39,.6);}
 @media (prefers-reduced-motion: no-preference){
   .seat.active .avatar{animation:pulseGold 1.8s ease-in-out infinite;}
@@ -192,7 +193,7 @@ button{font-family:inherit;}
   display:flex; align-items:center; justify-content:center;
 }
 .seat-name{font-weight:700; font-size:.66rem; color:#fff; max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.seat-status{font-size:.58rem; color:var(--success); font-weight:700; min-height:1em;}
+.seat-status{font-size:.58rem; color:var(--success); font-weight:700; min-height:1em; max-width:76px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .seat-status:empty{display:none;}
 
 /* Meld chips are now rendered on demand inside the "player melds" modal
@@ -231,9 +232,10 @@ button{font-family:inherit;}
   padding:6px;
 }
 .piles{display:flex; gap:14px; align-items:flex-end;}
-.pile{display:flex; flex-direction:column; align-items:center; gap:4px;}
+.pile{display:flex; flex-direction:column; align-items:center; gap:16px;}
 .pile-label{font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; color:#fff; opacity:.9; text-shadow:0 1px 3px rgba(0,0,0,.35); font-weight:700;}
 .pile-caption{font-size:.6rem; color:var(--cream-100); opacity:.85; text-align:center; max-width:150px; min-height:1.1em;}
+.pile-by{font-size:.58rem; color:var(--gold-300); opacity:.9; text-align:center; min-height:1em;}
 .pile-card-slot{width:var(--card-w); height:var(--card-h); position:relative;}
 .pile-deck{
   width:100%; height:100%; border-radius:8px;
@@ -467,6 +469,25 @@ button{font-family:inherit;}
 .card.selected.compatible{
   box-shadow:0 0 0 2px var(--gold-400), 0 10px 16px rgba(0,0,0,.45);
 }
+
+/* ---------- Discard pile: mark the card that just landed there ----------
+   Bot turns run on their own timer with nothing else drawing the eye to the
+   discard pile — this ring + tag makes the newest discard obvious even
+   without reading the log. */
+.card.just-discarded{
+  box-shadow:0 0 0 2px var(--brick-500), 0 4px 10px rgba(0,0,0,.28);
+}
+.card.just-discarded::before{
+  content:'novo';
+  position:absolute; top:-13px; left:50%; transform:translateX(-50%);
+  background:var(--brick-500); color:#fff;
+  font-size:.5rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+  padding:1px 6px; border-radius:999px; white-space:nowrap;
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+@media (prefers-reduced-motion: no-preference){
+  .card.just-discarded{ animation:fadeIn .35s ease; }
+}
 @media (prefers-reduced-motion: no-preference){
   .card.new-draw, .card.penalty-draw{ animation:fadeIn .35s ease; }
 }
@@ -554,6 +575,7 @@ button{font-family:inherit;}
         <div class="pile">
           <div class="pile-label">Descarte</div>
           <div class="pile-card-slot" id="discardPile"></div>
+          <div class="pile-by" id="discardBy"></div>
           <div class="pile-caption" id="outOfTurnHint"></div>
         </div>
       </div>
@@ -680,6 +702,7 @@ function initGame(){
     roundTurns: 0,
     lastProgressTurn: 0,
     lastDrawnIds: new Set(),
+    lastDiscardBy: null,
     handOrder: null,
   };
   document.getElementById('logBody').innerHTML = '';
@@ -702,6 +725,7 @@ function startRound(){
   state.roundTurns = 0;
   state.lastProgressTurn = 0;
   state.lastDrawnIds = new Set();
+  state.lastDiscardBy = null;
   state.handOrder = null;
   logMsg('— Rodada ' + (state.round+1) + ': ' + CONTRACTS[state.round].label + ' —');
   render();
@@ -892,7 +916,12 @@ function discardCard(playerIdx, card){
   const p = state.players[playerIdx];
   p.hand = p.hand.filter(c=>c.id!==card.id);
   state.discardPile.push(card);
+  state.lastDiscardBy = playerIdx;
   logMsg(p.name + ' descartou ' + cardLabel(card) + '.');
+  // Bot turns run on their own timers with no other on-screen cue that
+  // anything happened — a toast makes each discard visible without the
+  // player having to open the histórico sheet to piece together the round.
+  toast((playerIdx===0 ? 'Você' : p.name) + ' descartou ' + cardLabel(card) + '.');
   // Discarding ends the turn, so the "nova" highlight from this turn's draw
   // is done its job — clear it fully, not just the discarded card's id, or a
   // kept card stays tagged "nova" forever and keeps re-triggering scrollIntoView
@@ -1078,6 +1107,7 @@ function cardHTML(card, opts){
   if(opts.isNew) cls.push('new-draw');
   if(opts.isPenalty) cls.push('penalty-draw');
   if(opts.isCompatible) cls.push('compatible');
+  if(opts.justDiscarded) cls.push('just-discarded');
   if(card.isJoker){
     return '<button type="button" class="'+cls.join(' ')+'" data-id="'+card.id+'"><span class="pip">🃏</span></button>';
   }
@@ -1129,9 +1159,11 @@ function renderSeats(){
     avatarEl.dataset.count = p.hand.length;
     document.getElementById('name-'+i).textContent = p.name;
     document.getElementById('status-'+i).textContent =
-      (state.phase==='bot-turn' && state.turn===i) ? '…' :
-      (p.laidDown ? '✓' : '');
-    document.getElementById('seat-'+i).classList.toggle('active', state.turn===i && state.phase!=='round-over');
+      (state.phase==='bot-turn' && state.turn===i) ? 'pensando…' :
+      (p.melds.length>0 ? '🃏 ' + p.melds.length + (p.melds.length===1?' jogo':' jogos') : '');
+    const seatEl = document.getElementById('seat-'+i);
+    seatEl.classList.toggle('active', state.turn===i && state.phase!=='round-over');
+    seatEl.classList.toggle('has-melds', p.melds.length>0);
   }
 }
 
@@ -1145,10 +1177,14 @@ function renderCenter(){
   const disc = document.getElementById('discardPile');
   const top = state.discardPile[state.discardPile.length-1];
   if(top){
-    disc.innerHTML = cardHTML(top, {clickable:humanCanDraw});
+    disc.innerHTML = cardHTML(top, {clickable:humanCanDraw, justDiscarded: state.lastDiscardBy!==null});
   } else {
     disc.innerHTML = '<div class="pile-empty">vazio</div>';
   }
+  const discBy = document.getElementById('discardBy');
+  discBy.textContent = (top && state.lastDiscardBy!==null)
+    ? (state.lastDiscardBy===0 ? 'descartado por você' : 'descartado por '+state.players[state.lastDiscardBy].name)
+    : '';
   const hint = document.getElementById('outOfTurnHint');
   const myTentos = state.players[0].tentosLeft;
   if(!humanCanDraw){
