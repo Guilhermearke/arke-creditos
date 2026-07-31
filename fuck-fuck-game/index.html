@@ -56,9 +56,53 @@ button{font-family:inherit;}
   background:var(--rail-900);
   box-shadow:0 0 40px rgba(0,0,0,.4);
 }
+.game-screen.hidden{display:none;}
 @media (max-height:700px){
   :root{ --card-w:52px; --card-h:74px; }
 }
+
+/* ---------- Lobby: choose solo vs online, name entry, room waiting room ---------- */
+.lobby{
+  position:fixed; inset:0; z-index:100;
+  display:flex; align-items:center; justify-content:center;
+  background: radial-gradient(ellipse 130% 90% at 50% -10%, #2bc464 0%, var(--felt-900) 55%, var(--rail-900) 100%);
+  padding:20px;
+  overflow-y:auto;
+}
+.lobby.hidden{display:none;}
+.lobby-card{
+  background:linear-gradient(180deg, #17392f, #0e2620);
+  border:1px solid var(--gold-600);
+  border-radius:18px;
+  padding:26px 24px;
+  max-width:380px; width:100%;
+  box-shadow:0 20px 50px rgba(0,0,0,.6);
+  display:flex; flex-direction:column; gap:12px;
+}
+.lobby-card.hidden{display:none;}
+.lobby-card h1{font-family:var(--font-display); color:var(--gold-300); margin:0; font-size:1.6rem; text-align:center;}
+.lobby-card h2{font-family:var(--font-display); color:var(--gold-300); margin:0; font-size:1.2rem; display:flex; align-items:center; gap:8px;}
+.lobby-sub{color:var(--cream-100); font-size:.85rem; text-align:center; margin:0 0 6px;}
+.lobby-btn{width:100%; text-align:center; padding:13px;}
+.lobby-back{align-self:flex-start; background:none; border:none; color:var(--cream-100); font-size:.8rem; cursor:pointer; padding:0; text-decoration:underline;}
+.lobby-field{display:flex; flex-direction:column; gap:5px; font-size:.78rem; color:var(--cream-100);}
+.lobby-field input, .lobby-join-row input, .lobby-link-row input{
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:8px;
+  padding:10px 12px; color:#fff; font-size:.95rem; outline:none; font-family:inherit;
+}
+.lobby-field input::placeholder, .lobby-join-row input::placeholder{color:rgba(255,255,255,.4);}
+.lobby-or{text-align:center; font-size:.72rem; color:var(--cream-100); opacity:.7; margin:2px 0;}
+.lobby-join-row{display:flex; gap:8px;}
+.lobby-join-row input{flex:1; min-width:0; text-transform:uppercase; letter-spacing:.1em;}
+.lobby-link-row{display:flex; gap:8px;}
+.lobby-link-row input{flex:1; min-width:0; font-family:var(--font-mono); font-size:.76rem;}
+.lobby-status{font-size:.78rem; color:var(--brick-500); min-height:1.2em; text-align:center;}
+.lobby-players{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px;}
+.lobby-players li{display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.06); border-radius:10px; padding:8px 10px; font-size:.85rem; color:#fff;}
+.lobby-players li .dot{width:8px;height:8px;border-radius:50%;background:var(--success); flex:none;}
+.lobby-players li.pending{opacity:.5;}
+.lobby-players li.pending .dot{background:rgba(255,255,255,.3);}
+.lobby-hint{font-size:.76rem; color:var(--cream-100); opacity:.85; text-align:center; margin:0;}
 
 /* ---------- Topbar ---------- */
 .topbar{
@@ -560,7 +604,43 @@ button{font-family:inherit;}
 .tutorial-nav{display:flex; gap:8px;}
 </style>
 
-<div class="game-screen">
+<div class="lobby" id="lobbyScreen">
+  <div class="lobby-card" id="lobbyHome">
+    <h1>🃏 Fuck Fuck</h1>
+    <p class="lobby-sub">Escolha como jogar</p>
+    <button class="act-btn primary lobby-btn" id="btnSoloMode" type="button">🤖 Jogar sozinho contra bots</button>
+    <button class="act-btn lobby-btn" id="btnOnlineMode" type="button">🌐 Jogar online com amigos</button>
+  </div>
+
+  <div class="lobby-card hidden" id="lobbyOnline">
+    <button class="lobby-back" id="btnLobbyBackHome" type="button">← Voltar</button>
+    <h2>Jogar online</h2>
+    <label class="lobby-field">Seu nome
+      <input type="text" id="nameInput" maxlength="16" placeholder="Como te chamam na mesa?">
+    </label>
+    <button class="act-btn primary lobby-btn" id="btnCreateRoom" type="button">Criar sala nova</button>
+    <div class="lobby-or">ou entre com um código</div>
+    <div class="lobby-join-row">
+      <input type="text" id="roomCodeInput" maxlength="6" placeholder="CÓDIGO">
+      <button class="act-btn lobby-btn" id="btnJoinRoom" type="button">Entrar</button>
+    </div>
+    <div class="lobby-status" id="lobbyStatus"></div>
+  </div>
+
+  <div class="lobby-card hidden" id="lobbyWaiting">
+    <h2>🃏 Sala <span id="waitingRoomCode"></span></h2>
+    <p class="lobby-sub">Compartilhe o link com os outros jogadores:</p>
+    <div class="lobby-link-row">
+      <input type="text" id="roomLinkInput" readonly>
+      <button class="act-btn" id="btnCopyLink" type="button">Copiar</button>
+    </div>
+    <ul class="lobby-players" id="waitingPlayersList"></ul>
+    <button class="act-btn primary lobby-btn hidden" id="btnStartOnline" type="button">Começar (vagas vazias viram bots)</button>
+    <p class="lobby-hint" id="waitingHint"></p>
+  </div>
+</div>
+
+<div class="game-screen hidden" id="gameScreen">
 
   <header class="topbar">
     <span class="topbar-title">🃏 Fuck Fuck</span>
@@ -669,6 +749,7 @@ button{font-family:inherit;}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
 
@@ -708,6 +789,11 @@ const PLAYER_META = [
 /* ============================== STATE ============================== */
 let cardUid = 0;
 let state = null;
+// Which absolute seat (0-3) THIS browser tab controls. Always 0 in solo
+// mode (unchanged behavior). In an online room it's whichever seat this
+// client claimed on join, so "isMyTurn"/"my hand" mean different absolute
+// indices on different players' screens while looking identical locally.
+let mySeat = 0;
 
 function buildDeck(){
   const deck = [];
@@ -743,6 +829,9 @@ function initGame(){
     discardPile: [],
     turn: 0,
     phase: 'idle',
+    roundWinner: null,
+    mode: 'solo',
+    roomCode: null,
     selected: new Set(),
     focusedMeld: null,
     sortMode: 'suit',
@@ -778,9 +867,10 @@ function startRound(){
   state.lastDiscardBy = null;
   state.freeDiscardBuyUsed = false;
   state.handOrder = null;
+  roundOverModalShown = false;
   logMsg('— Rodada ' + (state.round+1) + ': ' + CONTRACTS[state.round].label + ' —');
   render();
-  if(!state.players[state.turn].isHuman) setTimeout(botTurn, 900);
+  scheduleBotTurnIfNeeded();
 }
 
 /* ============================== GROUP LOGIC ============================== */
@@ -941,7 +1031,7 @@ function drawFromDiscardWithPenalty(playerIdx){
     }
     p.tentosLeft -= 1;
   }
-  if(playerIdx===0) state.lastDrawnIds = new Set(gainedIds);
+  if(playerIdx===mySeat) state.lastDrawnIds = new Set(gainedIds);
   logMsg(isFree
     ? p.name + ' comprou ' + cardLabel(chosen) + ' do descarte (grátis na 1ª rodada).'
     : p.name + ' comprou ' + cardLabel(chosen) + ' do descarte + ' + (gainedIds.length-1) + ' carta(s) do monte (gastou 1 tento — restam ' + p.tentosLeft + ').');
@@ -1001,12 +1091,12 @@ function discardCard(playerIdx, card){
   // Bot turns run on their own timers with no other on-screen cue that
   // anything happened — a toast makes each discard visible without the
   // player having to open the histórico sheet to piece together the round.
-  toast((playerIdx===0 ? 'Você' : p.name) + ' descartou ' + cardLabel(card) + '.');
+  toast((playerIdx===mySeat ? 'Você' : p.name) + ' descartou ' + cardLabel(card) + '.');
   // Discarding ends the turn, so the "nova" highlight from this turn's draw
   // is done its job — clear it fully, not just the discarded card's id, or a
   // kept card stays tagged "nova" forever and keeps re-triggering scrollIntoView
   // on every future render (including during bot turns).
-  if(playerIdx===0) state.lastDrawnIds = new Set();
+  if(playerIdx===mySeat) state.lastDrawnIds = new Set();
   if(p.hand.length===0){ endRound(playerIdx); return; }
   nextTurn();
 }
@@ -1036,11 +1126,12 @@ function nextTurn(){
     return;
   }
   render();
-  if(!state.players[state.turn].isHuman) setTimeout(botTurn, 900);
+  scheduleBotTurnIfNeeded();
 }
 
 function endRound(winnerIdx){
   state.phase = 'round-over';
+  state.roundWinner = winnerIdx;
   for(const p of state.players){
     if(p.id===winnerIdx){ p.roundScore = 0; continue; }
     let pts = 0;
@@ -1049,12 +1140,12 @@ function endRound(winnerIdx){
     p.totalScore += pts;
   }
   logMsg(state.players[winnerIdx].name + ' bateu! Fim da rodada ' + (state.round+1) + '.');
-  render();
-  showRoundSummary(winnerIdx);
+  render(); // render() itself opens the round-summary modal — see roundOverModalShown
 }
 
 function forceEndRoundByExhaustion(){
   state.phase = 'round-over';
+  state.roundWinner = null;
   for(const p of state.players){
     let pts = 0;
     for(const c of p.hand) pts += c.isJoker ? JOKER_VALUE : RANK_VALUE[c.rank];
@@ -1062,13 +1153,17 @@ function forceEndRoundByExhaustion(){
   }
   logMsg('As cartas acabaram — a rodada terminou sem ninguém bater. Todos pontuam pela mão.');
   render();
-  showRoundSummary(null);
 }
 
 function goToNextRound(){
   state.round++;
   hideModal();
-  if(state.round>=CONTRACTS.length){ showFinalResults(); return; }
+  roundOverModalShown = false;
+  if(state.round>=CONTRACTS.length){
+    state.phase = 'game-over';
+    render();
+    return;
+  }
   startRound();
 }
 
@@ -1097,6 +1192,7 @@ function cardUtility(hand, card, contract){
 }
 
 function botTurn(){
+  botTurnScheduled = false;
   const idx = state.turn;
   const p = state.players[idx];
   const contract = CONTRACTS[state.round];
@@ -1221,7 +1317,30 @@ function backCardSlotHTML(count){
   return '<div class="pile-deck" id="drawPileInner"><span>'+count+'</span></div>';
 }
 
-function isHumanTurn(){ return state.turn===0; }
+function isMyTurn(){ return state.turn===mySeat; }
+// Solo mode always drives bots locally (unchanged behavior). In an online
+// room, every connected client would otherwise race to run the same bot
+// turn — only the host (seat 0, the room's creator) does it, so exactly
+// one client is ever driving. Known v1 limitation: bot turns pause if the
+// host disconnects, documented rather than solved with full presence
+// tracking for this first pass.
+function shouldDriveBots(){ return state.mode!=='online' || mySeat===0; }
+
+// Centralizes every place that might notice "it's now a bot's turn" — the
+// acting client's own nextTurn()/startRound(), AND (in online mode) the
+// host re-checking after any realtime update, including the echo of its
+// own writes. Without the scheduled-flag guard, both paths could fire for
+// the same turn and run the bot twice.
+let botTurnScheduled = false;
+function scheduleBotTurnIfNeeded(){
+  if(botTurnScheduled) return;
+  if(!state || state.phase==='round-over' || state.phase==='lobby' || state.phase==='idle') return;
+  const p = state.players[state.turn];
+  if(!p || p.isHuman) return;
+  if(!shouldDriveBots()) return;
+  botTurnScheduled = true;
+  setTimeout(botTurn, 900);
+}
 
 function renderPlaque(){
   document.getElementById('topbarMid').textContent = 'R'+(state.round+1)+'/6 · '+CONTRACTS[state.round].short;
@@ -1275,28 +1394,35 @@ function miniHandHTML(count, vertical){
   return html;
 }
 
+// DOM slots seat-1/2/3 (left/top/right) are fixed positions on screen, but
+// WHICH absolute seat (0-3) appears in each slot depends on mySeat — every
+// player's browser shows itself at the bottom and the other 3 in the same
+// relative left/top/right arrangement, regardless of who actually sits at
+// absolute seat 0-3. Solo mode has mySeat permanently 0, so slot->seat is
+// always 1->1, 2->2, 3->3 there, identical to the original behavior.
 function renderSeats(){
   const vertical = {1:true, 2:false, 3:true};
-  for(let i=1;i<=3;i++){
+  for(let slot=1;slot<=3;slot++){
+    const i = (mySeat+slot)%4;
     const p = state.players[i];
     const meta = PLAYER_META[i];
-    const avatarEl = document.getElementById('avatar-'+i);
-    avatarEl.textContent = p.name[0];
+    const avatarEl = document.getElementById('avatar-'+slot);
+    avatarEl.textContent = p.name ? p.name[0] : '?';
     avatarEl.style.background = meta.accent;
-    document.getElementById('name-'+i).textContent = p.name;
-    document.getElementById('status-'+i).textContent =
+    document.getElementById('name-'+slot).textContent = p.name || 'Aguardando…';
+    document.getElementById('status-'+slot).textContent =
       (state.phase==='bot-turn' && state.turn===i) ? 'pensando…' :
       (p.melds.length>0 ? '🃏 ' + p.melds.length + (p.melds.length===1?' jogo':' jogos') : '');
-    const seatEl = document.getElementById('seat-'+i);
+    const seatEl = document.getElementById('seat-'+slot);
     seatEl.classList.toggle('active', state.turn===i && state.phase!=='round-over');
     seatEl.classList.toggle('has-melds', p.melds.length>0);
-    document.getElementById('mini-'+i).innerHTML = miniHandHTML(p.hand.length, vertical[i]);
+    document.getElementById('mini-'+slot).innerHTML = miniHandHTML(p.hand.length, vertical[slot]);
   }
 }
 
 function renderCenter(){
   const dp = document.getElementById('drawPile');
-  const humanCanDraw = isHumanTurn() && state.phase==='await-draw';
+  const humanCanDraw = isMyTurn() && state.phase==='await-draw';
   dp.innerHTML = state.drawPile.length>0
     ? '<div class="pile-deck'+(humanCanDraw?' clickable':'')+'" id="drawPileInner"><span>'+state.drawPile.length+'</span></div>'
     : '<div class="pile-empty">vazio</div>';
@@ -1313,7 +1439,7 @@ function renderCenter(){
     ? (state.lastDiscardBy===0 ? 'descartado por você' : 'descartado por '+state.players[state.lastDiscardBy].name)
     : '';
   const hint = document.getElementById('outOfTurnHint');
-  const myTentos = state.players[0].tentosLeft;
+  const myTentos = state.players[mySeat].tentosLeft;
   if(!humanCanDraw || state.discardPile.length===0){
     hint.textContent = '';
   } else if(isDiscardBuyFree()){
@@ -1327,13 +1453,13 @@ function renderCenter(){
   const ti = document.getElementById('turnIndicator');
   if(state.phase==='round-over'){
     ti.textContent = 'Rodada encerrada.';
-  } else if(isHumanTurn()){
+  } else if(isMyTurn()){
     ti.textContent = state.phase==='await-draw' ? 'Sua vez — compre' : 'Sua vez';
   } else {
     ti.textContent = state.players[state.turn].name + ' está jogando' ;
     ti.classList.add('dots');
   }
-  if(isHumanTurn() || state.phase==='round-over') ti.classList.remove('dots');
+  if(isMyTurn() || state.phase==='round-over') ti.classList.remove('dots');
 }
 
 function sortedHand(hand){
@@ -1372,7 +1498,7 @@ function getDisplayHand(hand){
 }
 
 function renderFooter(){
-  const p = state.players[0];
+  const p = state.players[mySeat];
   document.getElementById('handInfo').innerHTML = '<b>'+p.hand.length+'</b> cartas · <b>'+handValue(p.hand)+'</b> pts · 🎫<b>'+p.tentosLeft+'</b>';
   document.getElementById('btnSort').title = 'Ordenar por ' + (state.sortMode==='suit' ? 'valor' : 'naipe');
 
@@ -1383,7 +1509,7 @@ function renderFooter(){
   const focusedMeld = state.focusedMeld ? state.players[state.focusedMeld.owner].melds[state.focusedMeld.meldIdx] : null;
 
   const fan = document.getElementById('handFan');
-  const interactive = isHumanTurn() && state.phase==='await-action';
+  const interactive = isMyTurn() && state.phase==='await-action';
   fan.innerHTML = getDisplayHand(p.hand).map(c=>cardHTML(c,{
     clickable: interactive,
     selected: state.selected.has(c.id),
@@ -1398,7 +1524,7 @@ function renderFooter(){
 
   // Contextual action bar: show only the button(s) that make sense for the
   // current selection instead of always showing all three (some disabled).
-  const canAct = isHumanTurn() && state.phase==='await-action';
+  const canAct = isMyTurn() && state.phase==='await-action';
   const contract = CONTRACTS[state.round];
   const needed = contract.groups.reduce((sum,g)=>sum+g.size, 0);
   const sel = state.selected.size;
@@ -1449,11 +1575,37 @@ function renderFooter(){
   }
 }
 
+// Tracks whether the round-summary / final-results modal has already been
+// opened for the current phase — centralizing the open-it-once check in
+// render() means it fires correctly whether the phase change came from a
+// local action (this client's own doing) or from a remote player's action
+// arriving over realtime — one code path covers both instead of every
+// caller having to remember to open the right modal itself.
+let roundOverModalShown = false;
+let finalResultsShown = false;
 function render(){
   renderPlaque();
   renderSeats();
   renderCenter();
   renderFooter();
+  if(state.phase==='round-over'){
+    if(!roundOverModalShown){ roundOverModalShown = true; showRoundSummary(state.roundWinner); }
+  } else if(state.phase==='game-over'){
+    if(!finalResultsShown){ finalResultsShown = true; showFinalResults(); }
+  } else if(roundOverModalShown || finalResultsShown){
+    // Phase moved on (host advanced the round) but this client's modal from
+    // the previous phase is still up — close it instead of leaving it stale.
+    roundOverModalShown = false;
+    finalResultsShown = false;
+    hideModal();
+  }
+  // Every local action ends in a render() call — hooking the sync here
+  // covers all of them uniformly instead of scattering pushRoomState()
+  // calls through every mutating function. applyingRemoteState guards
+  // against bouncing a just-received remote update straight back out.
+  if(state && state.mode==='online' && !applyingRemoteState){
+    pushRoomState();
+  }
 }
 
 /* ============================== LOG / TOAST / MODAL ============================== */
@@ -1484,28 +1636,43 @@ function hideModal(){
 
 function showRoundSummary(winnerIdx){
   const rows = state.players.slice().sort((a,b)=>a.roundScore-b.roundScore)
-    .map(p=>'<tr><td>'+p.name+(p.id===0?' (você)':'')+'</td><td>'+(p.id===winnerIdx?'bateu':'+'+p.roundScore)+'</td><td>'+p.totalScore+'</td></tr>')
+    .map(p=>'<tr><td>'+p.name+(p.id===mySeat?' (você)':'')+'</td><td>'+(p.id===winnerIdx?'bateu':'+'+p.roundScore)+'</td><td>'+p.totalScore+'</td></tr>')
     .join('');
   const isLast = state.round >= CONTRACTS.length-1;
+  // Advancing the round deals fresh cards — only one client may ever do
+  // that, so in an online room only the host gets the button; everyone
+  // else just waits for the host's dealt state to arrive over realtime.
+  const canAdvance = state.mode!=='online' || mySeat===0;
   showModal(
     '<h2>Fim da rodada '+(state.round+1)+'</h2>'
     + '<p>'+CONTRACTS[state.round].label+(winnerIdx!==null ? (' — ' + state.players[winnerIdx].name + ' bateu primeiro.') : ' — ninguém bateu; cartas esgotadas.')+'</p>'
     + '<table><tr><th>Jogador</th><th>Tentos na rodada</th><th>Total</th></tr>'+rows+'</table>'
-    + '<div class="modal-actions"><button class="act-btn primary" id="btnNextRound">'+(isLast?'Ver resultado final':'Próxima rodada')+'</button></div>'
+    + (canAdvance
+        ? '<div class="modal-actions"><button class="act-btn primary" id="btnNextRound">'+(isLast?'Ver resultado final':'Próxima rodada')+'</button></div>'
+        : '<p class="lobby-hint">Aguardando o dono da sala avançar…</p>')
   );
-  document.getElementById('btnNextRound').addEventListener('click', goToNextRound);
+  if(canAdvance){
+    document.getElementById('btnNextRound').addEventListener('click', goToNextRound);
+  }
 }
 
 function showFinalResults(){
   const ranked = state.players.slice().sort((a,b)=>a.totalScore-b.totalScore);
-  const rows = ranked.map((p,i)=>'<li class="'+(i===0?'current':'')+'"><span>'+(i+1)+'º — '+p.name+(p.id===0?' (você)':'')+'</span><span>'+p.totalScore+' tentos</span></li>').join('');
+  const rows = ranked.map((p,i)=>'<li class="'+(i===0?'current':'')+'"><span>'+(i+1)+'º — '+p.name+(p.id===mySeat?' (você)':'')+'</span><span>'+p.totalScore+' tentos</span></li>').join('');
   showModal(
     '<h2>🏆 Resultado final</h2>'
     + '<p>Fim das 6 rodadas. Vence quem somou menos tentos.</p>'
     + '<ul class="modal-list">'+rows+'</ul>'
     + '<div class="modal-actions"><button class="act-btn primary" id="btnPlayAgain">Jogar novamente</button></div>'
   );
-  document.getElementById('btnPlayAgain').addEventListener('click', ()=>{ hideModal(); initGame(); });
+  document.getElementById('btnPlayAgain').addEventListener('click', ()=>{
+    hideModal();
+    if(state.mode==='online'){
+      returnToLobby();
+    } else {
+      initGame();
+    }
+  });
 }
 
 // Melds live only in this on-demand modal (opened by tapping an avatar, or
@@ -1517,12 +1684,12 @@ function showFinalResults(){
 function showPlayerMelds(playerIdx){
   const p = state.players[playerIdx];
   const meta = PLAYER_META[playerIdx];
-  const canFocus = isHumanTurn() && state.players[0].laidDown && state.phase==='await-action';
+  const canFocus = isMyTurn() && state.players[mySeat].laidDown && state.phase==='await-action';
   const body = p.melds.length>0
     ? p.melds.map((m,mi)=>meldChipHTML(m,mi,canFocus)).join('')
     : '<p>Ainda não desceu nenhum jogo.</p>';
   showModal(
-    '<h2 style="color:'+meta.accent+'">'+p.name+(playerIdx===0?' (você)':'')+'</h2>'
+    '<h2 style="color:'+meta.accent+'">'+p.name+(playerIdx===mySeat?' (você)':'')+'</h2>'
     + '<p>'+p.totalScore+' tentos · 🎫'+p.tentosLeft+' fichas restantes'+(p.laidDown?'':' · ainda não desceu')+'</p>'
     + '<div class="modal-melds" data-player="'+playerIdx+'">'+body+'</div>'
     + '<div class="modal-actions"><button class="act-btn primary" id="btnCloseMelds">Fechar</button></div>'
@@ -1546,7 +1713,7 @@ function showPlayerMelds(playerIdx){
 
 function showScoreboard(){
   const ranked = state.players.slice().sort((a,b)=>a.totalScore-b.totalScore);
-  const rows = ranked.map((p,i)=>'<li class="'+(p.id===0?'current':'')+'"><span>'+(i+1)+'º — '+p.name+(p.id===0?' (você)':'')+'</span><span>'+p.totalScore+' tentos · 🎫'+p.tentosLeft+'</span></li>').join('');
+  const rows = ranked.map((p,i)=>'<li class="'+(p.id===mySeat?'current':'')+'"><span>'+(i+1)+'º — '+p.name+(p.id===mySeat?' (você)':'')+'</span><span>'+p.totalScore+' tentos · 🎫'+p.tentosLeft+'</span></li>').join('');
   showModal(
     '<h2>Placar</h2>'
     + '<p>'+CONTRACTS[state.round].label+' — Rodada '+(state.round+1)+' de 6.</p>'
@@ -1627,9 +1794,233 @@ function endTutorial(){
   try{ localStorage.setItem('fuckfuck_tutorial_seen', '1'); }catch(err){ /* storage unavailable, ignore */ }
 }
 
+/* ============================== MULTIPLAYER ============================== */
+// Casual online rooms via Supabase: no login, the room code (baked into a
+// shareable link) is the only "credential". One row per room in `rooms`,
+// its `state` jsonb column holding everything except each client's own
+// local-only UI state (selected/focusedMeld/sortMode/handOrder — those are
+// per-viewer choices, not shared game truth, and must never be clobbered
+// by a remote update or bounced back out to other players).
+const SUPABASE_URL = 'https://tewqgzpkqyizetpxjges.supabase.co';
+const SUPABASE_ANON_KEY = 'REPLACE_WITH_ANON_KEY';
+
+let supabaseClient = null;
+function getSupabaseClient(){
+  if(!supabaseClient && window.supabase && SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.indexOf('REPLACE_WITH')!==0){
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  return supabaseClient;
+}
+
+function genRoomCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I — easy to read aloud/type
+  let code = '';
+  for(let i=0;i<5;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+function makeSeatPlayer(i, name, isHuman){
+  return {
+    id:i, name, isHuman,
+    hand:[], melds:[], laidDown:false,
+    totalScore:0, roundScore:0,
+    tentosLeft:TENTOS_BUDGET,
+  };
+}
+
+function createOnlineRoomState(hostName){
+  return {
+    mode:'online',
+    roomCode:null,
+    phase:'lobby', // waiting for players — real game phases start once the host clicks "Começar"
+    round:0,
+    players:[
+      makeSeatPlayer(0, hostName, true),
+      makeSeatPlayer(1, null, null),
+      makeSeatPlayer(2, null, null),
+      makeSeatPlayer(3, null, null),
+    ],
+    drawPile:[], discardPile:[], turn:0, roundWinner:null,
+    selected:new Set(), focusedMeld:null, sortMode:'suit',
+    log:[], roundTurns:0, lastProgressTurn:0,
+    lastDrawnIds:new Set(), lastDiscardBy:null, freeDiscardBuyUsed:false,
+    handOrder:null,
+  };
+}
+
+// Everything that must be identical across every player's browser. Sets
+// don't survive JSON, so they're serialized to arrays here and rebuilt on
+// the way back in by applySharedState().
+function sharedStateSnapshot(){
+  return {
+    mode: state.mode,
+    phase: state.phase,
+    round: state.round,
+    players: state.players,
+    drawPile: state.drawPile,
+    discardPile: state.discardPile,
+    turn: state.turn,
+    roundWinner: state.roundWinner,
+    log: state.log,
+    roundTurns: state.roundTurns,
+    lastProgressTurn: state.lastProgressTurn,
+    lastDrawnIds: Array.from(state.lastDrawnIds || []),
+    lastDiscardBy: state.lastDiscardBy,
+    freeDiscardBuyUsed: state.freeDiscardBuyUsed,
+  };
+}
+
+function applySharedState(remote){
+  const keepLocal = {
+    roomCode: state ? state.roomCode : null,
+    selected: state ? state.selected : new Set(),
+    focusedMeld: state ? state.focusedMeld : null,
+    sortMode: state ? state.sortMode : 'suit',
+    handOrder: state ? state.handOrder : null,
+  };
+  state = Object.assign({}, remote, keepLocal, {
+    lastDrawnIds: new Set(remote.lastDrawnIds || []),
+  });
+}
+
+// True only while we're rendering because a remote update just arrived —
+// stops that same state from immediately being pushed straight back out.
+let applyingRemoteState = false;
+function pushRoomState(){
+  if(!state || state.mode!=='online' || !state.roomCode) return;
+  const sb = getSupabaseClient();
+  if(!sb) return;
+  sb.from('rooms')
+    .update({ state: sharedStateSnapshot(), updated_at: new Date().toISOString() })
+    .eq('code', state.roomCode)
+    .then(({error})=>{ if(error) console.error('pushRoomState failed', error); });
+}
+
+let roomChannel = null;
+function subscribeRoom(code){
+  const sb = getSupabaseClient();
+  if(!sb) return;
+  if(roomChannel){ sb.removeChannel(roomChannel); roomChannel = null; }
+  roomChannel = sb.channel('room-'+code)
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'rooms', filter:'code=eq.'+code}, (payload)=>{
+      const wasLobby = state && state.phase==='lobby';
+      applyingRemoteState = true;
+      applySharedState(payload.new.state);
+      applyingRemoteState = false;
+      if(state.phase==='lobby'){
+        renderWaitingRoom();
+      } else {
+        if(wasLobby){ enterGameScreen(); maybeStartTutorial(); }
+        render();
+      }
+      scheduleBotTurnIfNeeded();
+    })
+    .subscribe();
+}
+
+function enterGameScreen(){
+  document.getElementById('lobbyScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+}
+
+function showLobbyView(id){
+  for(const cardId of ['lobbyHome','lobbyOnline','lobbyWaiting']){
+    document.getElementById(cardId).classList.toggle('hidden', cardId!==id);
+  }
+}
+
+function renderWaitingRoom(){
+  document.getElementById('waitingRoomCode').textContent = state.roomCode;
+  document.getElementById('roomLinkInput').value = location.origin + location.pathname + '?room=' + state.roomCode;
+  const list = document.getElementById('waitingPlayersList');
+  list.innerHTML = state.players.map((p,i)=>{
+    const filled = !!p.name;
+    return '<li class="'+(filled?'':'pending')+'"><span class="dot"></span><span>'
+      + (filled ? p.name + (i===mySeat?' (você)':'') : 'Vaga '+(i+1)+' — vazia, vira bot')
+      + '</span></li>';
+  }).join('');
+  const joinedCount = state.players.filter(p=>p.name).length;
+  document.getElementById('btnStartOnline').classList.toggle('hidden', mySeat!==0);
+  document.getElementById('waitingHint').textContent = mySeat===0
+    ? (joinedCount<2 ? 'Aguardando pelo menos mais 1 jogador…' : 'Pode começar quando quiser — vagas vazias viram bots.')
+    : 'Aguardando o dono da sala começar o jogo…';
+}
+
+async function createRoom(hostName){
+  const sb = getSupabaseClient();
+  const statusEl = document.getElementById('lobbyStatus');
+  if(!sb){ statusEl.textContent = 'Multiplayer ainda não configurado (chave da API ausente).'; return; }
+  const code = genRoomCode();
+  mySeat = 0;
+  state = createOnlineRoomState(hostName);
+  state.roomCode = code;
+  const { error } = await sb.from('rooms').insert({ code, state: sharedStateSnapshot() });
+  if(error){ statusEl.textContent = 'Não deu pra criar a sala — tente de novo.'; console.error(error); return; }
+  subscribeRoom(code);
+  showLobbyView('lobbyWaiting');
+  renderWaitingRoom();
+}
+
+async function joinRoom(code, name){
+  const sb = getSupabaseClient();
+  const statusEl = document.getElementById('lobbyStatus');
+  if(!sb){ statusEl.textContent = 'Multiplayer ainda não configurado (chave da API ausente).'; return; }
+  const { data, error } = await sb.from('rooms').select('*').eq('code', code).maybeSingle();
+  if(error || !data){ statusEl.textContent = 'Sala não encontrada. Confira o código.'; return; }
+  const remoteState = data.state;
+  const seatIdx = remoteState.players.findIndex(p=>!p.name);
+  if(seatIdx===-1){ statusEl.textContent = 'Essa sala já está cheia.'; return; }
+  remoteState.players[seatIdx] = makeSeatPlayer(seatIdx, name, true);
+  const { error: updErr } = await sb.from('rooms').update({ state: remoteState, updated_at: new Date().toISOString() }).eq('code', code);
+  if(updErr){ statusEl.textContent = 'Não deu pra entrar — tente de novo.'; console.error(updErr); return; }
+  mySeat = seatIdx;
+  applyingRemoteState = true;
+  applySharedState(remoteState);
+  applyingRemoteState = false;
+  state.roomCode = code;
+  subscribeRoom(code);
+  showLobbyView('lobbyWaiting');
+  renderWaitingRoom();
+}
+
+function returnToLobby(){
+  if(roomChannel){
+    const sb = getSupabaseClient();
+    if(sb) sb.removeChannel(roomChannel);
+    roomChannel = null;
+  }
+  mySeat = 0;
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('lobbyScreen').classList.remove('hidden');
+  showLobbyView('lobbyHome');
+}
+
+// Host-only: fills any still-empty seats with bots, deals, and pushes —
+// every other client just receives this via the realtime subscription.
+function startOnlineGame(){
+  if(mySeat!==0) return;
+  const botNames = ['Zé','Marisa','Beto'];
+  let botI = 0;
+  for(let i=1;i<4;i++){
+    if(!state.players[i].name){
+      state.players[i] = makeSeatPlayer(i, botNames[botI++]+' (bot)', false);
+    }
+  }
+  state.phase = 'idle';
+  enterGameScreen();
+  startRound();
+}
+
 /* ============================== EVENT WIRING ============================== */
 document.getElementById('btnRules').addEventListener('click', showRules);
-document.getElementById('btnNewGame').addEventListener('click', ()=>{ hideModal(); initGame(); });
+document.getElementById('btnNewGame').addEventListener('click', ()=>{
+  hideModal();
+  if(state && state.mode==='online'){
+    returnToLobby();
+  } else {
+    initGame();
+  }
+});
 document.getElementById('modalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='modalOverlay') hideModal(); });
 
 document.getElementById('btnTutorial').addEventListener('click', startTutorial);
@@ -1652,12 +2043,12 @@ document.getElementById('btnSort').addEventListener('click', ()=>{
 });
 
 document.getElementById('drawPile').addEventListener('click', (e)=>{
-  if(!(isHumanTurn() && state.phase==='await-draw')) return;
+  if(!(isMyTurn() && state.phase==='await-draw')) return;
   if(!e.target.closest('#drawPileInner')) return;
-  const p = state.players[0];
-  if(!drawCard(0,'deck')){
+  const p = state.players[mySeat];
+  if(!drawCard(mySeat,'deck')){
     if(!ensureDrawPile()){ toast('Não há mais cartas para comprar.'); return; }
-    drawCard(0,'deck');
+    drawCard(mySeat,'deck');
   }
   logMsg('Você comprou do monte.');
   state.lastDrawnIds = new Set([p.hand[p.hand.length-1].id]);
@@ -1665,7 +2056,7 @@ document.getElementById('drawPile').addEventListener('click', (e)=>{
   render();
 });
 document.getElementById('discardPile').addEventListener('click', (e)=>{
-  if(!(isHumanTurn() && state.phase==='await-draw')) return;
+  if(!(isMyTurn() && state.phase==='await-draw')) return;
   if(state.discardPile.length===0) return;
   if(!canBuyFromDiscard(0)){ toast('Você não tem mais tentos — só pode comprar do monte fechado.'); return; }
   const isFree = isDiscardBuyFree();
@@ -1681,18 +2072,18 @@ document.getElementById('handFan').addEventListener('click', (e)=>{
   if(justDragged){ justDragged = false; return; }
   const btn = e.target.closest('.card[data-id]');
   if(!btn) return;
-  if(!(isHumanTurn() && state.phase==='await-action')) return;
+  if(!(isMyTurn() && state.phase==='await-action')) return;
   const id = btn.dataset.id;
-  const p = state.players[0];
+  const p = state.players[mySeat];
   if(state.focusedMeld){
     const owner = state.players[state.focusedMeld.owner];
     const meld = owner.melds[state.focusedMeld.meldIdx];
     const card = p.hand.find(c=>c.id===id);
     if(meld && card && canAddToMeld(meld, card)){
-      addCardToMeld(0, card, meld);
+      addCardToMeld(mySeat, card, meld);
       state.lastDrawnIds.delete(card.id);
       state.focusedMeld = null;
-      if(p.hand.length===0){ endRound(0); return; }
+      if(p.hand.length===0){ endRound(mySeat); return; }
       render();
       return;
     }
@@ -1780,7 +2171,7 @@ function endHandDrag(e){
     const r = siblings[i].getBoundingClientRect();
     if(e.clientX < r.left + r.width/2){ dropIndex = i; break; }
   }
-  const p = state.players[0];
+  const p = state.players[mySeat];
   const order = getDisplayHand(p.hand).map(c=>c.id);
   const fromIdx = order.indexOf(info.id);
   if(fromIdx!==-1) order.splice(fromIdx,1);
@@ -1791,34 +2182,34 @@ function endHandDrag(e){
 handFanEl.addEventListener('pointerup', endHandDrag);
 handFanEl.addEventListener('pointercancel', endHandDrag);
 
-for(let i=1;i<=3;i++){
-  document.getElementById('seat-'+i).addEventListener('click', ()=>showPlayerMelds(i));
+for(let slot=1;slot<=3;slot++){
+  document.getElementById('seat-'+slot).addEventListener('click', ()=>showPlayerMelds((mySeat+slot)%4));
 }
 document.getElementById('btnMyMelds').addEventListener('click', ()=>showPlayerMelds(0));
 
 document.getElementById('btnBaixar').addEventListener('click', ()=>{
-  const p = state.players[0];
+  const p = state.players[mySeat];
   const cards = Array.from(state.selected).map(id=>p.hand.find(c=>c.id===id)).filter(Boolean);
   let ok;
   if(!p.laidDown){
     const contract = CONTRACTS[state.round];
     const needed = contract.groups.reduce((sum,g)=>sum+g.size, 0);
     if(cards.length!==needed){ toast('Selecione exatamente '+needed+' cartas para este jogo.'); return; }
-    ok = layDownContract(0, cards);
+    ok = layDownContract(mySeat, cards);
     if(!ok){ toast('Essa seleção não forma o jogo exigido.'); return; }
   } else {
     if(cards.length<3){ toast('Selecione pelo menos 3 cartas do mesmo número, ou 3+ em sequência do mesmo naipe, para um jogo extra.'); return; }
-    ok = layExtraMeld(0, cards);
+    ok = layExtraMeld(mySeat, cards);
     if(!ok){ toast('Essa seleção não forma um jogo válido.'); return; }
   }
   state.selected.clear();
   for(const c of cards) state.lastDrawnIds.delete(c.id);
-  if(p.hand.length===0){ endRound(0); return; }
+  if(p.hand.length===0){ endRound(mySeat); return; }
   render();
 });
 
 document.getElementById('btnAjuda').addEventListener('click', ()=>{
-  const p = state.players[0];
+  const p = state.players[mySeat];
   const contract = CONTRACTS[state.round];
   if(!p.laidDown){
     const result = tryPartition(p.hand, contract.groups);
@@ -1836,13 +2227,13 @@ document.getElementById('btnAjuda').addEventListener('click', ()=>{
 });
 
 document.getElementById('btnDescartar').addEventListener('click', ()=>{
-  const p = state.players[0];
+  const p = state.players[mySeat];
   if(state.selected.size!==1) return;
   const id = Array.from(state.selected)[0];
   const card = p.hand.find(c=>c.id===id);
   if(!card) return;
   state.selected.clear();
-  discardCard(0, card);
+  discardCard(mySeat, card);
 });
 
 const topbarMenuEl = document.getElementById('topbarMenu');
@@ -1867,9 +2258,71 @@ document.getElementById('btnCancelarSel').addEventListener('click', ()=>{
   render();
 });
 
+/* ============================== LOBBY WIRING ============================== */
+function maybeStartTutorial(){
+  let seen = false;
+  try{ seen = localStorage.getItem('fuckfuck_tutorial_seen')==='1'; }catch(err){ /* storage unavailable, ignore */ }
+  if(!seen) setTimeout(startTutorial, 700);
+}
+
+document.getElementById('btnSoloMode').addEventListener('click', ()=>{
+  document.getElementById('lobbyScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+  initGame();
+  maybeStartTutorial();
+});
+
+document.getElementById('btnOnlineMode').addEventListener('click', ()=>{
+  showLobbyView('lobbyOnline');
+});
+document.getElementById('btnLobbyBackHome').addEventListener('click', ()=>{
+  document.getElementById('lobbyStatus').textContent = '';
+  showLobbyView('lobbyHome');
+});
+
+document.getElementById('btnCreateRoom').addEventListener('click', async ()=>{
+  const name = document.getElementById('nameInput').value.trim();
+  const statusEl = document.getElementById('lobbyStatus');
+  if(!name){ statusEl.textContent = 'Digite seu nome primeiro.'; return; }
+  statusEl.textContent = 'Criando sala…';
+  await createRoom(name);
+});
+
+document.getElementById('btnJoinRoom').addEventListener('click', async ()=>{
+  const name = document.getElementById('nameInput').value.trim();
+  const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+  const statusEl = document.getElementById('lobbyStatus');
+  if(!name){ statusEl.textContent = 'Digite seu nome primeiro.'; return; }
+  if(!code){ statusEl.textContent = 'Digite o código da sala.'; return; }
+  statusEl.textContent = 'Entrando…';
+  await joinRoom(code, name);
+});
+
+document.getElementById('btnCopyLink').addEventListener('click', async ()=>{
+  const input = document.getElementById('roomLinkInput');
+  input.select();
+  try{
+    await navigator.clipboard.writeText(input.value);
+    toast('Link copiado!');
+  }catch(err){
+    try{ document.execCommand('copy'); toast('Link copiado!'); }catch(err2){ /* clipboard unavailable, user can select+copy manually */ }
+  }
+});
+
+document.getElementById('btnStartOnline').addEventListener('click', ()=>{
+  startOnlineGame();
+  maybeStartTutorial();
+});
+
 /* ============================== BOOT ============================== */
-initGame();
-let tutorialAlreadySeen = false;
-try{ tutorialAlreadySeen = localStorage.getItem('fuckfuck_tutorial_seen')==='1'; }catch(err){ /* storage unavailable, ignore */ }
-if(!tutorialAlreadySeen) setTimeout(startTutorial, 700);
+(function checkRoomLinkParam(){
+  try{
+    const params = new URLSearchParams(location.search);
+    const code = params.get('room');
+    if(code){
+      document.getElementById('roomCodeInput').value = code.toUpperCase();
+      showLobbyView('lobbyOnline');
+    }
+  }catch(err){ /* URL parsing unavailable, ignore */ }
+})();
 </script>
