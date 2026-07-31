@@ -717,7 +717,8 @@ function startRound(){
   for(let i=0;i<12;i++){
     for(const p of state.players){ p.hand.push(state.drawPile.pop()); }
   }
-  state.discardPile.push(state.drawPile.pop());
+  // Discard pile starts empty — nobody has discarded yet. The first player
+  // of the round has no choice but to draw from the closed monte.
   state.turn = state.round % 4;
   state.phase = 'await-draw';
   state.selected.clear();
@@ -856,24 +857,35 @@ function layDownContract(playerIdx, cardObjs){
 
 // Comprar do descarte custa 1 tento e vem "pacote": a carta escolhida +
 // 3 cartas aleatórias do monte fechado, todas de uma vez. Só descarta 1 depois.
+// Round 1 (index 0) is a freebie: buying from the discard costs no tento and
+// doesn't bundle the 3 extra monte cards — you just get the one card you
+// picked, same net hand size as a normal monte draw. The paid "pacote" rule
+// only kicks in from round 2 onward.
 function canBuyFromDiscard(playerIdx){
-  return state.players[playerIdx].tentosLeft > 0 && state.discardPile.length > 0;
+  if(state.discardPile.length===0) return false;
+  if(state.round===0) return true;
+  return state.players[playerIdx].tentosLeft > 0;
 }
 function drawFromDiscardWithPenalty(playerIdx){
   const p = state.players[playerIdx];
   if(!canBuyFromDiscard(playerIdx)) return false;
+  const isFree = state.round===0;
   const chosen = state.discardPile.pop();
   p.hand.push(chosen);
   const gainedIds = [chosen.id];
-  for(let i=0;i<3;i++){
-    if(!ensureDrawPile()) break;
-    const c = state.drawPile.pop();
-    p.hand.push(c);
-    gainedIds.push(c.id);
+  if(!isFree){
+    for(let i=0;i<3;i++){
+      if(!ensureDrawPile()) break;
+      const c = state.drawPile.pop();
+      p.hand.push(c);
+      gainedIds.push(c.id);
+    }
+    p.tentosLeft -= 1;
   }
-  p.tentosLeft -= 1;
   if(playerIdx===0) state.lastDrawnIds = new Set(gainedIds);
-  logMsg(p.name + ' comprou ' + cardLabel(chosen) + ' do descarte + ' + (gainedIds.length-1) + ' carta(s) do monte (gastou 1 tento — restam ' + p.tentosLeft + ').');
+  logMsg(isFree
+    ? p.name + ' comprou ' + cardLabel(chosen) + ' do descarte (grátis na 1ª rodada).'
+    : p.name + ' comprou ' + cardLabel(chosen) + ' do descarte + ' + (gainedIds.length-1) + ' carta(s) do monte (gastou 1 tento — restam ' + p.tentosLeft + ').');
   return true;
 }
 
@@ -1187,8 +1199,10 @@ function renderCenter(){
     : '';
   const hint = document.getElementById('outOfTurnHint');
   const myTentos = state.players[0].tentosLeft;
-  if(!humanCanDraw){
+  if(!humanCanDraw || state.discardPile.length===0){
     hint.textContent = '';
+  } else if(state.round===0){
+    hint.textContent = 'Grátis nesta 1ª rodada — sem cartas extras';
   } else if(myTentos>0){
     hint.textContent = '1 tento (' + myTentos + '/' + TENTOS_BUDGET + ') + 3 do monte';
   } else {
@@ -1433,7 +1447,7 @@ function showRules(){
     '<h2>Regras — Fuck Fuck</h2>'
     + '<p>Cada jogador recebe 12 cartas. Em cada uma das 6 rodadas existe um jogo obrigatório — grupos de cartas do <b>mesmo número</b> (trinca, quadra, quina), exceto a última rodada, que pede uma <b>canastra</b> (sequência de 7 cartas do mesmo naipe). Curinga substitui qualquer carta. O jogo precisa ser descido por inteiro, de uma vez. Depois de descer, você pode encaixar cartas em jogos na mesa (seus ou dos outros) ou baixar jogos extras (3+ cartas do mesmo número, ou outra sequência de 7) para se livrar da mão mais rápido.</p>'
     + '<ul class="modal-list">'+rows+'</ul>'
-    + '<p><b>Como comprar:</b> na sua vez, escolha entre o Monte fechado (1 carta grátis e aleatória) ou o Descarte (você escolhe a carta, mas gasta <b>1 ficha de tento</b> e é obrigado a puxar mais <b>3 cartas aleatórias</b> do monte — 4 cartas ao todo). Depois, descarte só 1 carta — sua mão cresce em 3 cartas líquidas. Cada jogador começa a partida com <b>'+TENTOS_BUDGET+' fichas de tento</b> para gastar nas 6 rodadas inteiras — elas não se renovam, e sem fichas só dá pra comprar do monte fechado. Não existe compra fora da vez: só quem está jogando pode comprar do descarte.</p>'
+    + '<p><b>Como comprar:</b> na sua vez, escolha entre o Monte fechado (1 carta grátis e aleatória) ou o Descarte (você escolhe a carta, mas gasta <b>1 ficha de tento</b> e é obrigado a puxar mais <b>3 cartas aleatórias</b> do monte — 4 cartas ao todo). Depois, descarte só 1 carta — sua mão cresce em 3 cartas líquidas. Na <b>1ª rodada</b> a compra do descarte é uma exceção: é <b>grátis</b> e não vem com cartas extras do monte, valendo como uma compra normal. Cada jogador começa a partida com <b>'+TENTOS_BUDGET+' fichas de tento</b> para gastar a partir da 2ª rodada — elas não se renovam, e sem fichas só dá pra comprar do monte fechado. Não existe compra fora da vez: só quem está jogando pode comprar do descarte.</p>'
     + '<p>Depois de descer, você pode encaixar cartas em jogos abertos na mesa — de qualquer jogador que também já tenha descido — desde que sejam compatíveis: outro 8 numa trinca 8-8-8 vira quadra, e num canastra 4♥-10♥ dá pra encaixar o 3♥ antes ou o J♥ depois. Só é permitido encaixar depois que você mesmo já desceu.</p>'
     + '<p>A rodada termina quando alguém fica sem cartas (bate) e recebe 0 pontos na rodada, não importa quantas cartas tenha comprado antes. Os demais somam os <b>tentos</b> das cartas que sobraram na mão: 2 a 10 valem o próprio número, J/Q/K valem 10, Ás vale 15, e Curinga vale 20. Depois das 6 rodadas, vence quem tiver <span class="rank1">menos tentos</span>.</p>'
     + '<div class="modal-actions"><button class="act-btn primary" id="btnCloseRules">Entendi</button></div>'
@@ -1451,7 +1465,7 @@ const TUTORIAL_STEPS = [
   { title:'Sua mão', selector:'#handFan',
     body:'Suas 12 cartas ficam aqui embaixo. Clique em uma carta para selecioná-la (ela sobe e fica com um contorno dourado) — é assim que você escolhe cartas para descer, encaixar ou descartar. Você também pode arrastar as cartas para reorganizá-las do seu jeito, a qualquer momento — a ordem fica salva até o fim da rodada.' },
   { title:'Comprar uma carta', selector:'.piles',
-    body:'Na sua vez, o Monte fechado dá 1 carta grátis e aleatória. Já o Descarte deixa você escolher a carta, mas gasta 1 ficha de tento e vem "no pacote": você recebe também 3 cartas aleatórias do monte — 4 cartas de uma vez. Você começa a partida com apenas '+TENTOS_BUDGET+' fichas para as 6 rodadas inteiras, e elas não voltam — use com cuidado. As cartas novas ganham uma etiqueta dourada na sua mão.' },
+    body:'Na sua vez, o Monte fechado dá 1 carta grátis e aleatória. Já o Descarte deixa você escolher a carta, mas gasta 1 ficha de tento e vem "no pacote": você recebe também 3 cartas aleatórias do monte — 4 cartas de uma vez. Na 1ª rodada essa compra é grátis e sem cartas extras, como um mimo de boas-vindas. A partir da 2ª rodada você tem apenas '+TENTOS_BUDGET+' fichas para o resto da partida, e elas não voltam — use com cuidado. As cartas novas ganham uma etiqueta branca na sua mão.' },
   { title:'Descer o jogo', selector:'#btnBaixar',
     body:'Depois de comprar, se suas cartas selecionadas formarem exatamente o jogo da rodada (mostrado no topo da mesa), clique aqui para descê-lo. Não sabe montar? Use o botão "Sugerir descida" ao lado, que procura a combinação por você.' },
   { title:'Encaixar ou baixar jogo extra', selector:'.opponents-strip',
@@ -1539,10 +1553,11 @@ document.getElementById('discardPile').addEventListener('click', (e)=>{
   if(!(isHumanTurn() && state.phase==='await-draw')) return;
   if(state.discardPile.length===0) return;
   if(!canBuyFromDiscard(0)){ toast('Você não tem mais tentos — só pode comprar do monte fechado.'); return; }
+  const isFree = state.round===0;
   const top = state.discardPile[state.discardPile.length-1];
   const label = cardLabel(top);
   drawFromDiscardWithPenalty(0);
-  toast('Comprou ' + label + ' + 3 do monte — gastou 1 tento.');
+  toast(isFree ? 'Comprou ' + label + ' do descarte — grátis nesta 1ª rodada!' : 'Comprou ' + label + ' + 3 do monte — gastou 1 tento.');
   state.phase = 'await-action';
   render();
 });
