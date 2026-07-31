@@ -144,57 +144,59 @@ button{font-family:inherit;}
   overflow-x:auto;
   background:var(--rail-800);
 }
+/* Opponents as tappable avatar bubbles — tap one to see that player's
+   melds (reference: opponents shown as small avatar chips, no permanent
+   melds panel taking up screen space). */
 .seat{
   flex:1;
   min-width:0;
-  background:rgba(255,255,255,.06);
-  border:2px solid transparent;
+  background:none;
+  border:none;
   border-radius:12px;
-  padding:6px 8px;
+  padding:6px 4px;
   display:flex;
   flex-direction:column;
-  gap:2px;
-  transition:box-shadow .25s ease, border-color .2s ease, background .2s ease;
+  align-items:center;
+  gap:3px;
+  cursor:pointer;
+  transition:background .2s ease;
 }
-.seat.active{border-color:var(--gold-400); background:rgba(255,194,51,.14); box-shadow:0 0 14px rgba(201,162,39,.35);}
+.seat:hover{background:rgba(255,255,255,.08);}
+.seat.active .avatar{box-shadow:0 0 0 2px var(--gold-400), 0 0 14px rgba(201,162,39,.6);}
 @media (prefers-reduced-motion: no-preference){
-  .seat.active{animation:pulseGold 1.8s ease-in-out infinite;}
+  .seat.active .avatar{animation:pulseGold 1.8s ease-in-out infinite;}
 }
 @keyframes pulseGold{
-  0%,100%{box-shadow:0 0 14px rgba(201,162,39,.25);}
-  50%{box-shadow:0 0 22px rgba(201,162,39,.55);}
+  0%,100%{box-shadow:0 0 0 2px var(--gold-400), 0 0 10px rgba(201,162,39,.35);}
+  50%{box-shadow:0 0 0 2px var(--gold-300), 0 0 18px rgba(201,162,39,.65);}
 }
-.seat-head{display:flex; align-items:center; gap:6px; min-width:0;}
 .avatar{
-  width:24px;height:24px;border-radius:50%;
+  position:relative;
+  width:34px;height:34px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-display); font-weight:800; font-size:.7rem;
+  font-family:var(--font-display); font-weight:800; font-size:.9rem;
   color:#fff;
   flex:none;
   box-shadow:0 2px 0 rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.4);
   border:2px solid rgba(255,255,255,.5);
 }
-.seat-info{min-width:0; display:flex; flex-direction:column; gap:0;}
-.seat-name{font-weight:700; font-size:.74rem; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.seat-meta{display:flex; gap:5px; font-size:.6rem; color:var(--cream-100); font-family:var(--font-mono); opacity:.9; white-space:nowrap;}
-.hand-count::before{content:'🂠 '; opacity:.7;}
-.seat-status{font-size:.6rem; color:var(--gold-300); opacity:.95; min-height:1em; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.avatar::after{
+  content:attr(data-count);
+  position:absolute; right:-4px; bottom:-4px;
+  min-width:15px; height:15px; padding:0 3px;
+  border-radius:999px;
+  background:var(--ink-900);
+  border:1.5px solid var(--rail-800);
+  color:var(--gold-300);
+  font-family:var(--font-mono); font-weight:700; font-size:.55rem;
+  display:flex; align-items:center; justify-content:center;
+}
+.seat-name{font-weight:700; font-size:.66rem; color:#fff; max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.seat-status{font-size:.58rem; color:var(--success); font-weight:700; min-height:1em;}
 .seat-status:empty{display:none;}
 
-/* ---------- Mesa: all laid-down melds, one horizontally-scrolling strip ---------- */
-.mesa-bar{
-  flex:none;
-  display:flex;
-  gap:14px;
-  padding:8px 10px;
-  overflow-x:auto;
-  overflow-y:hidden;
-  max-height:132px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-.mesa-group{flex:none; display:flex; flex-direction:column; gap:4px; min-width:70px;}
-.mesa-group-name{font-size:.6rem; text-transform:uppercase; letter-spacing:.05em; color:var(--gold-300); font-weight:700; white-space:nowrap;}
-.meld-zone{display:flex; flex-direction:column; gap:4px; min-height:4px; max-height:104px; overflow-y:auto; overflow-x:hidden;}
+/* Meld chips are now rendered on demand inside the "player melds" modal
+   (opened by tapping an avatar), not in a permanent on-table panel. */
 .meld-chip{
   display:flex; align-items:center; gap:3px; flex-wrap:nowrap; white-space:nowrap;
   background:rgba(255,255,255,.14);
@@ -206,8 +208,8 @@ button{font-family:inherit;}
 }
 .meld-chip.clickable{cursor:pointer; border-color:var(--gold-400); box-shadow:0 0 0 2px rgba(255,194,51,.35);}
 .meld-chip.clickable:hover{background:rgba(255,194,51,.22);}
+.meld-chip.focused{border-color:var(--gold-300); box-shadow:0 0 0 2px rgba(255,221,119,.6), 0 0 10px rgba(255,194,51,.5);}
 .meld-label{font-size:.56rem; text-transform:uppercase; letter-spacing:.03em; color:var(--gold-300); flex:none; text-shadow:0 1px 2px rgba(0,0,0,.4);}
-.meld-zone:empty::after{content:'—'; opacity:.45; font-size:.72rem; padding:3px 0;}
 
 /* ---------- Table mid: mesa bar (above) + center piles (fills remaining space) ---------- */
 .table-mid{
@@ -228,7 +230,7 @@ button{font-family:inherit;}
   gap:8px;
   padding:6px;
 }
-.piles{display:flex; gap:22px; align-items:flex-end;}
+.piles{display:flex; gap:14px; align-items:flex-end;}
 .pile{display:flex; flex-direction:column; align-items:center; gap:4px;}
 .pile-label{font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; color:#fff; opacity:.9; text-shadow:0 1px 3px rgba(0,0,0,.35); font-weight:700;}
 .pile-caption{font-size:.6rem; color:var(--cream-100); opacity:.85; text-align:center; max-width:150px; min-height:1.1em;}
@@ -294,9 +296,9 @@ button{font-family:inherit;}
 .card .corner.br{bottom:4px; right:4px; transform:rotate(180deg);}
 .card .pip{font-size:1.5rem;}
 .card.joker .pip{font-size:1.3rem;}
-.card-sm{width:29px; height:41px; border-radius:5px; font-size:.55rem;}
-.card-sm .pip{font-size:.72rem;}
-.card-sm .corner{font-size:.38rem;}
+.card-sm{width:40px; height:57px; border-radius:6px; font-size:.68rem;}
+.card-sm .pip{font-size:.95rem;}
+.card-sm .corner{font-size:.46rem;}
 
 /* ---------- Hand dock: fixed at the bottom, never scrolls away ---------- */
 .hand-dock{
@@ -309,9 +311,11 @@ button{font-family:inherit;}
   gap:4px;
   z-index:10;
 }
-.hand-dock-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
-.hand-info{font-size:.76rem; color:var(--cream-100);}
+.hand-dock-top{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.hand-info{font-size:.76rem; color:var(--cream-100); flex:1; min-width:0;}
 .hand-info b{color:var(--gold-300); font-family:var(--font-mono);}
+.my-melds-btn{border:none; cursor:pointer; white-space:nowrap;}
+.my-melds-btn:hover{background:#000;}
 .sort-toggle{background:rgba(255,255,255,.12); border:none; color:#fff; font-weight:700; border-radius:999px; width:30px; height:30px; font-size:.85rem; cursor:pointer;}
 .sort-toggle:hover{background:rgba(255,255,255,.22);}
 
@@ -342,8 +346,8 @@ button{font-family:inherit;}
   background:var(--cream-50);
   border:none;
   color:var(--felt-900);
-  border-radius:12px;
-  padding:9px 14px;
+  border-radius:999px;
+  padding:9px 16px;
   font-size:.8rem;
   font-weight:700;
   letter-spacing:.02em;
@@ -406,6 +410,7 @@ button{font-family:inherit;}
 .modal-list{list-style:none; margin:8px 0; padding:0; display:flex; flex-direction:column; gap:5px;}
 .modal-list li{font-size:.82rem; padding:6px 8px; border-radius:7px; background:rgba(255,255,255,.04); display:flex; justify-content:space-between; gap:8px;}
 .modal-list li.current{background:rgba(201,162,39,.16); border:1px solid var(--gold-400); color:var(--gold-300); font-weight:600;}
+.modal-melds{display:flex; flex-direction:column; gap:8px; margin:10px 0;}
 
 /* ---------- Toast ---------- */
 #toast{
@@ -446,6 +451,20 @@ button{font-family:inherit;}
   padding:1px 6px; border-radius:999px; white-space:nowrap;
 }
 .card.selected.new-draw, .card.selected.penalty-draw{
+  box-shadow:0 0 0 2px var(--gold-400), 0 10px 16px rgba(0,0,0,.45);
+}
+
+/* ---------- "Fits here" callout while a mesa meld is focused ----------
+   Tapping a meld on the table focuses it; every hand card that legally
+   extends it gets this green ring so the player can just tap the card —
+   no separate "select card, then find the meld" two-step. */
+.card.compatible{
+  box-shadow:0 0 0 3px var(--success), 0 6px 12px rgba(0,0,0,.3);
+}
+.card.compatible.new-draw, .card.compatible.penalty-draw{
+  box-shadow:0 0 0 3px var(--success), 0 6px 12px rgba(0,0,0,.3);
+}
+.card.selected.compatible{
   box-shadow:0 0 0 2px var(--gold-400), 0 10px 16px rgba(0,0,0,.45);
 }
 @media (prefers-reduced-motion: no-preference){
@@ -506,45 +525,24 @@ button{font-family:inherit;}
   </header>
 
   <div class="opponents-strip">
-    <div class="seat" id="seat-1">
-      <div class="seat-head">
-        <div class="avatar" id="avatar-1"></div>
-        <div class="seat-info">
-          <div class="seat-name" id="name-1"></div>
-          <div class="seat-meta"><span class="hand-count" id="count-1"></span><span class="seat-score" id="score-1"></span></div>
-        </div>
-      </div>
-      <div class="seat-status" id="status-1"></div>
-    </div>
-    <div class="seat" id="seat-2">
-      <div class="seat-head">
-        <div class="avatar" id="avatar-2"></div>
-        <div class="seat-info">
-          <div class="seat-name" id="name-2"></div>
-          <div class="seat-meta"><span class="hand-count" id="count-2"></span><span class="seat-score" id="score-2"></span></div>
-        </div>
-      </div>
-      <div class="seat-status" id="status-2"></div>
-    </div>
-    <div class="seat" id="seat-3">
-      <div class="seat-head">
-        <div class="avatar" id="avatar-3"></div>
-        <div class="seat-info">
-          <div class="seat-name" id="name-3"></div>
-          <div class="seat-meta"><span class="hand-count" id="count-3"></span><span class="seat-score" id="score-3"></span></div>
-        </div>
-      </div>
-      <div class="seat-status" id="status-3"></div>
-    </div>
+    <button class="seat" id="seat-1" type="button" data-player="1">
+      <div class="avatar" id="avatar-1"></div>
+      <span class="seat-name" id="name-1"></span>
+      <span class="seat-status" id="status-1"></span>
+    </button>
+    <button class="seat" id="seat-2" type="button" data-player="2">
+      <div class="avatar" id="avatar-2"></div>
+      <span class="seat-name" id="name-2"></span>
+      <span class="seat-status" id="status-2"></span>
+    </button>
+    <button class="seat" id="seat-3" type="button" data-player="3">
+      <div class="avatar" id="avatar-3"></div>
+      <span class="seat-name" id="name-3"></span>
+      <span class="seat-status" id="status-3"></span>
+    </button>
   </div>
 
   <div class="table-mid">
-    <div class="mesa-bar" id="mesaBar">
-      <div class="mesa-group"><span class="mesa-group-name">Você</span><div class="meld-zone" id="melds-0"></div></div>
-      <div class="mesa-group"><span class="mesa-group-name" id="mesaName-1">Zé</span><div class="meld-zone" id="melds-1"></div></div>
-      <div class="mesa-group"><span class="mesa-group-name" id="mesaName-2">Marisa</span><div class="meld-zone" id="melds-2"></div></div>
-      <div class="mesa-group"><span class="mesa-group-name" id="mesaName-3">Beto</span><div class="meld-zone" id="melds-3"></div></div>
-    </div>
     <div class="center-piles">
       <div class="turn-indicator" id="turnIndicator">Preparando a mesa…</div>
       <div class="piles">
@@ -565,6 +563,7 @@ button{font-family:inherit;}
   <footer class="hand-dock">
     <div class="hand-dock-top">
       <span class="hand-info" id="handInfo">Sua mão</span>
+      <button class="topbar-badge my-melds-btn" id="btnMyMelds" type="button" hidden>🃏 0 jogos</button>
       <button class="sort-toggle" id="btnSort" type="button" title="Alternar ordenação">🔀</button>
     </div>
     <div class="hand-fan" id="handFan"></div>
@@ -675,6 +674,7 @@ function initGame(){
     turn: 0,
     phase: 'idle',
     selected: new Set(),
+    focusedMeld: null,
     sortMode: 'suit',
     log: [],
     roundTurns: 0,
@@ -698,6 +698,7 @@ function startRound(){
   state.turn = state.round % 4;
   state.phase = 'await-draw';
   state.selected.clear();
+  state.focusedMeld = null;
   state.roundTurns = 0;
   state.lastProgressTurn = 0;
   state.lastDrawnIds = new Set();
@@ -905,6 +906,7 @@ function nextTurn(){
   state.turn = (state.turn+1)%4;
   state.roundTurns++;
   state.selected.clear();
+  state.focusedMeld = null;
   state.phase = 'await-draw';
   render();
   if(!state.players[state.turn].isHuman) setTimeout(botTurn, 900);
@@ -1075,6 +1077,7 @@ function cardHTML(card, opts){
   if(opts.selected) cls.push('selected');
   if(opts.isNew) cls.push('new-draw');
   if(opts.isPenalty) cls.push('penalty-draw');
+  if(opts.isCompatible) cls.push('compatible');
   if(card.isJoker){
     return '<button type="button" class="'+cls.join(' ')+'" data-id="'+card.id+'"><span class="pip">🃏</span></button>';
   }
@@ -1123,15 +1126,12 @@ function renderSeats(){
     const avatarEl = document.getElementById('avatar-'+i);
     avatarEl.textContent = p.name[0];
     avatarEl.style.background = meta.accent;
+    avatarEl.dataset.count = p.hand.length;
     document.getElementById('name-'+i).textContent = p.name;
-    document.getElementById('count-'+i).textContent = p.hand.length;
-    document.getElementById('score-'+i).textContent = p.totalScore + 'pts · 🎫' + p.tentosLeft;
     document.getElementById('status-'+i).textContent =
-      (state.phase==='bot-turn' && state.turn===i) ? 'pensando…' :
-      (p.laidDown ? 'jogo descido' : '');
+      (state.phase==='bot-turn' && state.turn===i) ? '…' :
+      (p.laidDown ? '✓' : '');
     document.getElementById('seat-'+i).classList.toggle('active', state.turn===i && state.phase!=='round-over');
-    const addEligible = state.selected.size===1 && isHumanTurn() && state.players[0].laidDown && state.phase==='await-action';
-    document.getElementById('melds-'+i).innerHTML = p.melds.map((m,mi)=>meldChipHTML(m,mi,addEligible)).join('');
   }
 }
 
@@ -1211,8 +1211,11 @@ function renderFooter(){
   document.getElementById('handInfo').innerHTML = '<b>'+p.hand.length+'</b> cartas · <b>'+handValue(p.hand)+'</b> pts · 🎫<b>'+p.tentosLeft+'</b>';
   document.getElementById('btnSort').title = 'Ordenar por ' + (state.sortMode==='suit' ? 'valor' : 'naipe');
 
-  const addEligible = state.selected.size===1 && isHumanTurn() && p.laidDown && state.phase==='await-action';
-  document.getElementById('melds-0').innerHTML = p.melds.map((m,mi)=>meldChipHTML(m,mi,addEligible)).join('');
+  const btnMyMelds = document.getElementById('btnMyMelds');
+  btnMyMelds.hidden = p.melds.length===0;
+  btnMyMelds.textContent = '🃏 ' + p.melds.length + (p.melds.length===1 ? ' jogo' : ' jogos');
+
+  const focusedMeld = state.focusedMeld ? state.players[state.focusedMeld.owner].melds[state.focusedMeld.meldIdx] : null;
 
   const fan = document.getElementById('handFan');
   const interactive = isHumanTurn() && state.phase==='await-action';
@@ -1220,6 +1223,7 @@ function renderFooter(){
     clickable: interactive,
     selected: state.selected.has(c.id),
     isNew: state.lastDrawnIds.has(c.id),
+    isCompatible: focusedMeld ? canAddToMeld(focusedMeld, c) : false,
   })).join('');
   if(state.lastDrawnIds.size>0){
     const firstId = state.lastDrawnIds.values().next().value;
@@ -1248,6 +1252,9 @@ function renderFooter(){
   const newCardNote = state.lastDrawnIds.size>0 ? ' Etiqueta "nova" = acabou de comprar.' : '';
   if(!canAct){
     hint.textContent = '';
+  } else if(focusedMeld){
+    btnCancelar.hidden = false;
+    hint.textContent = 'Toque numa carta destacada em verde para encaixar, ou cancele.';
   } else if(!p.laidDown){
     btnBaixar.textContent = 'Descer jogo';
     if(sel===needed){
@@ -1269,10 +1276,10 @@ function renderFooter(){
       hint.textContent = 'Baixar essas '+sel+' cartas como jogo extra.';
     } else if(sel===1){
       btnDescartar.hidden = false; btnCancelar.hidden = false;
-      hint.textContent = 'Descartar, ou toque num jogo da mesa para encaixar essa carta.';
+      hint.textContent = 'Descartar essa carta, ou toque num avatar (ou em "🃏 jogos") para encaixá-la.';
     } else {
       btnAjuda.hidden = false; btnAjuda.textContent = 'Sugerir jogo extra';
-      hint.textContent = 'Selecione 1 carta para encaixar/descartar, ou 3+ do mesmo número (ou 7 em sequência) para jogo extra.' + newCardNote;
+      hint.textContent = 'Toque num avatar pra encaixar, selecione 1 carta pra descartar, ou 3+ do mesmo número (ou 7 em sequência) pra jogo extra.' + newCardNote;
     }
   }
 }
@@ -1336,6 +1343,42 @@ function showFinalResults(){
   document.getElementById('btnPlayAgain').addEventListener('click', ()=>{ hideModal(); initGame(); });
 }
 
+// Melds live only in this on-demand modal (opened by tapping an avatar, or
+// the "🃏 N jogos" button for your own hand) instead of a permanent on-table
+// panel — keeps the fixed screen free for the hand/piles/opponents. Tapping
+// a meld chip inside focuses it (closes the modal, highlights every hand
+// card that legally extends it) so the next tap on a highlighted card
+// encaixes it directly.
+function showPlayerMelds(playerIdx){
+  const p = state.players[playerIdx];
+  const meta = PLAYER_META[playerIdx];
+  const canFocus = isHumanTurn() && state.players[0].laidDown && state.phase==='await-action';
+  const body = p.melds.length>0
+    ? p.melds.map((m,mi)=>meldChipHTML(m,mi,canFocus)).join('')
+    : '<p>Ainda não desceu nenhum jogo.</p>';
+  showModal(
+    '<h2 style="color:'+meta.accent+'">'+p.name+(playerIdx===0?' (você)':'')+'</h2>'
+    + '<p>'+p.totalScore+' tentos · 🎫'+p.tentosLeft+' fichas restantes'+(p.laidDown?'':' · ainda não desceu')+'</p>'
+    + '<div class="modal-melds" data-player="'+playerIdx+'">'+body+'</div>'
+    + '<div class="modal-actions"><button class="act-btn primary" id="btnCloseMelds">Fechar</button></div>'
+  );
+  document.getElementById('btnCloseMelds').addEventListener('click', hideModal);
+  document.querySelector('.modal-melds').addEventListener('click', (e)=>{
+    const chip = e.target.closest('.meld-chip.clickable');
+    if(!chip) return;
+    const ownerIdx = Number(chip.dataset.meldOwner);
+    const meldIdx = Number(chip.dataset.meldIdx);
+    hideModal();
+    if(state.focusedMeld && state.focusedMeld.owner===ownerIdx && state.focusedMeld.meldIdx===meldIdx){
+      state.focusedMeld = null;
+    } else {
+      state.focusedMeld = {owner:ownerIdx, meldIdx};
+      state.selected.clear();
+    }
+    render();
+  });
+}
+
 function showScoreboard(){
   const ranked = state.players.slice().sort((a,b)=>a.totalScore-b.totalScore);
   const rows = ranked.map((p,i)=>'<li class="'+(p.id===0?'current':'')+'"><span>'+(i+1)+'º — '+p.name+(p.id===0?' (você)':'')+'</span><span>'+p.totalScore+' tentos · 🎫'+p.tentosLeft+'</span></li>').join('');
@@ -1375,8 +1418,8 @@ const TUTORIAL_STEPS = [
     body:'Na sua vez, o Monte fechado dá 1 carta grátis e aleatória. Já o Descarte deixa você escolher a carta, mas gasta 1 ficha de tento e vem "no pacote": você recebe também 3 cartas aleatórias do monte — 4 cartas de uma vez. Você começa a partida com apenas '+TENTOS_BUDGET+' fichas para as 6 rodadas inteiras, e elas não voltam — use com cuidado. As cartas novas ganham uma etiqueta dourada na sua mão.' },
   { title:'Descer o jogo', selector:'#btnBaixar',
     body:'Depois de comprar, se suas cartas selecionadas formarem exatamente o jogo da rodada (mostrado no topo da mesa), clique aqui para descê-lo. Não sabe montar? Use o botão "Sugerir descida" ao lado, que procura a combinação por você.' },
-  { title:'Encaixar ou baixar jogo extra', selector:'#melds-0',
-    body:'Depois de descer, seu jogo aparece aqui embaixo. Em turnos seguintes você tem duas formas de se livrar do resto da mão: selecione 1 carta e clique num jogo na mesa (seu ou dos adversários) para encaixá-la ali, ou selecione 3+ cartas do mesmo número (ou outros 7 em sequência) e clique em "Baixar jogo extra".' },
+  { title:'Encaixar ou baixar jogo extra', selector:'.opponents-strip',
+    body:'Depois de descer, toque no avatar de um adversário (ou no botão "🃏 jogos" perto da sua mão) para ver os jogos dele e encaixar uma carta: escolha o jogo e as cartas da sua mão que servem ali ficam destacadas em verde — é só tocar numa delas. Ou selecione 3+ cartas do mesmo número (ou outros 7 em sequência) e clique em "Baixar jogo extra" para começar um jogo novo.' },
   { title:'Descartar', selector:'#btnDescartar',
     body:'Para terminar seu turno, selecione 1 carta e clique em "Descartar carta" — só 1 carta, mesmo que sua mão tenha crescido comprando do descarte. Quem ficar sem cartas primeiro vence a rodada na hora (bateu).' },
   { title:'Pontuação em tentos', selector:'#btnPlacar',
@@ -1474,6 +1517,23 @@ document.getElementById('handFan').addEventListener('click', (e)=>{
   if(!btn) return;
   if(!(isHumanTurn() && state.phase==='await-action')) return;
   const id = btn.dataset.id;
+  const p = state.players[0];
+  if(state.focusedMeld){
+    const owner = state.players[state.focusedMeld.owner];
+    const meld = owner.melds[state.focusedMeld.meldIdx];
+    const card = p.hand.find(c=>c.id===id);
+    if(meld && card && canAddToMeld(meld, card)){
+      addCardToMeld(0, card, meld);
+      state.lastDrawnIds.delete(card.id);
+      state.focusedMeld = null;
+      if(p.hand.length===0){ endRound(0); return; }
+      render();
+      return;
+    }
+    // Tapped a card that doesn't fit — drop the focus and fall through to
+    // normal select/deselect for that card instead of silently ignoring it.
+    state.focusedMeld = null;
+  }
   if(state.selected.has(id)) state.selected.delete(id);
   else state.selected.add(id);
   render();
@@ -1565,30 +1625,10 @@ function endHandDrag(e){
 handFanEl.addEventListener('pointerup', endHandDrag);
 handFanEl.addEventListener('pointercancel', endHandDrag);
 
-function meldZoneClickHandler(e){
-  const chip = e.target.closest('.meld-chip.clickable');
-  if(!chip) return;
-  if(!(isHumanTurn() && state.phase==='await-action')) return;
-  if(state.selected.size!==1) return;
-  const p = state.players[0];
-  if(!p.laidDown) return;
-  const ownerIdx = Number(chip.dataset.meldOwner);
-  const meldIdx = Number(chip.dataset.meldIdx);
-  const owner = state.players[ownerIdx];
-  const meld = owner.melds[meldIdx];
-  const cardId = Array.from(state.selected)[0];
-  const card = p.hand.find(c=>c.id===cardId);
-  if(!card) return;
-  const ok = addCardToMeld(0, card, meld);
-  if(!ok){ toast('Essa carta não encaixa nesse jogo.'); return; }
-  state.selected.clear();
-  state.lastDrawnIds.delete(card.id);
-  if(p.hand.length===0){ endRound(0); return; }
-  render();
+for(let i=1;i<=3;i++){
+  document.getElementById('seat-'+i).addEventListener('click', ()=>showPlayerMelds(i));
 }
-for(let i=0;i<=3;i++){
-  document.getElementById('melds-'+i).addEventListener('click', meldZoneClickHandler);
-}
+document.getElementById('btnMyMelds').addEventListener('click', ()=>showPlayerMelds(0));
 
 document.getElementById('btnBaixar').addEventListener('click', ()=>{
   const p = state.players[0];
@@ -1657,6 +1697,7 @@ document.getElementById('btnPlacar').addEventListener('click', showScoreboard);
 
 document.getElementById('btnCancelarSel').addEventListener('click', ()=>{
   state.selected.clear();
+  state.focusedMeld = null;
   render();
 });
 
