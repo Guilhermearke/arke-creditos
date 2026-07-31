@@ -136,32 +136,28 @@ button{font-family:inherit;}
 .topbar-menu button.danger{color:var(--brick-600);}
 
 /* ---------- Opponents strip (compact horizontal row, not stacked cards) ---------- */
-.opponents-strip{
-  flex:none;
-  display:flex;
-  gap:6px;
-  padding:8px 8px 6px;
-  overflow-x:auto;
-  background:var(--rail-800);
-}
-/* Opponents as tappable avatar bubbles — tap one to see that player's
-   melds (reference: opponents shown as small avatar chips, no permanent
-   melds panel taking up screen space). */
+/* Opponents sit spatially around the felt — top/left/right — each with a
+   small overlapping "hand" of face-down cards that grows/shrinks live with
+   their real card count, instead of a flat horizontal strip. Tapping a
+   seat still opens that player's melds modal. */
 .seat{
-  flex:1;
-  min-width:0;
+  position:absolute;
+  z-index:8;
   background:none;
   border:none;
-  border-radius:12px;
-  padding:6px 4px;
+  padding:4px;
+  border-radius:14px;
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:3px;
+  gap:5px;
   cursor:pointer;
   transition:background .2s ease;
 }
 .seat:hover{background:rgba(255,255,255,.08);}
+.seat.top{top:8px; left:50%; transform:translateX(-50%);}
+.seat.left{left:6px; top:50%; transform:translateY(-50%);}
+.seat.right{right:6px; top:50%; transform:translateY(-50%);}
 .seat.has-melds .avatar{box-shadow:0 0 0 2px var(--success);}
 .seat.active .avatar{box-shadow:0 0 0 2px var(--gold-400), 0 0 14px rgba(201,162,39,.6);}
 @media (prefers-reduced-motion: no-preference){
@@ -171,30 +167,64 @@ button{font-family:inherit;}
   0%,100%{box-shadow:0 0 0 2px var(--gold-400), 0 0 10px rgba(201,162,39,.35);}
   50%{box-shadow:0 0 0 2px var(--gold-300), 0 0 18px rgba(201,162,39,.65);}
 }
+.player-info{
+  display:flex; align-items:center; gap:6px;
+  padding:4px 8px;
+  border-radius:12px;
+  background:rgba(4,31,19,.8);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 5px 14px rgba(0,0,0,.25);
+  white-space:nowrap;
+}
 .avatar{
-  position:relative;
-  width:34px;height:34px;border-radius:50%;
+  width:28px;height:28px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-display); font-weight:800; font-size:.9rem;
+  font-family:var(--font-display); font-weight:800; font-size:.78rem;
   color:#fff;
   flex:none;
   box-shadow:0 2px 0 rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.4);
   border:2px solid rgba(255,255,255,.5);
 }
-.avatar::after{
-  content:attr(data-count);
-  position:absolute; right:-4px; bottom:-4px;
-  min-width:15px; height:15px; padding:0 3px;
-  border-radius:999px;
-  background:var(--ink-900);
-  border:1.5px solid var(--rail-800);
-  color:var(--gold-300);
-  font-family:var(--font-mono); font-weight:700; font-size:.55rem;
-  display:flex; align-items:center; justify-content:center;
-}
-.seat-name{font-weight:700; font-size:.66rem; color:#fff; max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.seat-status{font-size:.58rem; color:var(--success); font-weight:700; min-height:1em; max-width:76px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.seat-text{display:flex; flex-direction:column; align-items:flex-start; gap:0; min-width:0;}
+.seat-name{font-weight:700; font-size:.66rem; color:#fff; max-width:70px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.seat-status{font-size:.56rem; color:var(--success); font-weight:700; min-height:1em; max-width:76px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .seat-status:empty{display:none;}
+
+/* Mini card-backs standing in for each opponent's hand — deliberately
+   smaller than the main player's cards and capped at a handful visually,
+   with the real live count on the badge. Top row stays straight (no fan/
+   arc); side seats stack vertically along the table edge. */
+.mini-hand{position:relative;}
+.mini-hand.top{width:96px; height:36px;}
+.mini-hand.side{width:32px; height:96px;}
+.mini-card{
+  position:absolute;
+  width:23px; height:32px;
+  border-radius:4px;
+  border:1px solid rgba(255,255,255,.75);
+  background:
+    linear-gradient(45deg,transparent 44%,rgba(255,255,255,.25) 44% 56%,transparent 56%),
+    linear-gradient(-45deg,transparent 44%,rgba(255,255,255,.25) 44% 56%,transparent 56%),
+    var(--p1-accent);
+  background-size:9px 9px;
+  box-shadow:0 3px 7px rgba(0,0,0,.28);
+}
+.seat.left .mini-card{transform:rotate(90deg);}
+.seat.right .mini-card{transform:rotate(-90deg);}
+.count-pill{
+  position:absolute;
+  min-width:18px; height:18px; padding:0 4px;
+  border-radius:999px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:.58rem; font-weight:800;
+  color:var(--ink-900);
+  background:var(--gold-400);
+  border:2px solid rgba(255,255,255,.85);
+  box-shadow:0 3px 6px rgba(0,0,0,.25);
+  z-index:4;
+}
+/* count-pill position (top/left/right) is set inline per hand in JS, since
+   it must track the last rendered card, not a fixed container edge. */
 
 /* Meld chips are now rendered on demand inside the "player melds" modal
    (opened by tapping an avatar), not in a permanent on-table panel. */
@@ -212,18 +242,19 @@ button{font-family:inherit;}
 .meld-chip.focused{border-color:var(--gold-300); box-shadow:0 0 0 2px rgba(255,221,119,.6), 0 0 10px rgba(255,194,51,.5);}
 .meld-label{font-size:.56rem; text-transform:uppercase; letter-spacing:.03em; color:var(--gold-300); flex:none; text-shadow:0 1px 2px rgba(0,0,0,.4);}
 
-/* ---------- Table mid: mesa bar (above) + center piles (fills remaining space) ---------- */
-.table-mid{
+/* ---------- Table: felt with opponents seated around it, piles centered ---------- */
+.table-wrap{
+  position:relative;
   flex:1;
   min-height:0;
   display:flex;
   flex-direction:column;
+  align-items:center;
+  justify-content:center;
   background:radial-gradient(ellipse 100% 80% at 50% 25%, var(--felt-700) 0%, var(--felt-800) 55%, var(--felt-900) 100%);
   overflow:hidden;
 }
 .center-piles{
-  flex:1;
-  min-height:0;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -545,25 +576,40 @@ button{font-family:inherit;}
     </div>
   </header>
 
-  <div class="opponents-strip">
-    <button class="seat" id="seat-1" type="button" data-player="1">
-      <div class="avatar" id="avatar-1"></div>
-      <span class="seat-name" id="name-1"></span>
-      <span class="seat-status" id="status-1"></span>
+  <div class="table-wrap">
+    <button class="seat top" id="seat-2" type="button" data-player="2">
+      <div class="player-info">
+        <div class="avatar" id="avatar-2"></div>
+        <div class="seat-text">
+          <span class="seat-name" id="name-2"></span>
+          <span class="seat-status" id="status-2"></span>
+        </div>
+      </div>
+      <div class="mini-hand top" id="mini-2"></div>
     </button>
-    <button class="seat" id="seat-2" type="button" data-player="2">
-      <div class="avatar" id="avatar-2"></div>
-      <span class="seat-name" id="name-2"></span>
-      <span class="seat-status" id="status-2"></span>
-    </button>
-    <button class="seat" id="seat-3" type="button" data-player="3">
-      <div class="avatar" id="avatar-3"></div>
-      <span class="seat-name" id="name-3"></span>
-      <span class="seat-status" id="status-3"></span>
-    </button>
-  </div>
 
-  <div class="table-mid">
+    <button class="seat left" id="seat-1" type="button" data-player="1">
+      <div class="player-info">
+        <div class="avatar" id="avatar-1"></div>
+        <div class="seat-text">
+          <span class="seat-name" id="name-1"></span>
+          <span class="seat-status" id="status-1"></span>
+        </div>
+      </div>
+      <div class="mini-hand side" id="mini-1"></div>
+    </button>
+
+    <button class="seat right" id="seat-3" type="button" data-player="3">
+      <div class="player-info">
+        <div class="avatar" id="avatar-3"></div>
+        <div class="seat-text">
+          <span class="seat-name" id="name-3"></span>
+          <span class="seat-status" id="status-3"></span>
+        </div>
+      </div>
+      <div class="mini-hand side" id="mini-3"></div>
+    </button>
+
     <div class="center-piles">
       <div class="turn-indicator" id="turnIndicator">Preparando a mesa…</div>
       <div class="piles">
@@ -703,6 +749,7 @@ function initGame(){
     lastProgressTurn: 0,
     lastDrawnIds: new Set(),
     lastDiscardBy: null,
+    freeDiscardBuyUsed: false,
     handOrder: null,
   };
   document.getElementById('logBody').innerHTML = '';
@@ -727,6 +774,7 @@ function startRound(){
   state.lastProgressTurn = 0;
   state.lastDrawnIds = new Set();
   state.lastDiscardBy = null;
+  state.freeDiscardBuyUsed = false;
   state.handOrder = null;
   logMsg('— Rodada ' + (state.round+1) + ': ' + CONTRACTS[state.round].label + ' —');
   render();
@@ -857,19 +905,22 @@ function layDownContract(playerIdx, cardObjs){
 
 // Comprar do descarte custa 1 tento e vem "pacote": a carta escolhida +
 // 3 cartas aleatórias do monte fechado, todas de uma vez. Só descarta 1 depois.
-// Round 1 (index 0) is a freebie: buying from the discard costs no tento and
-// doesn't bundle the 3 extra monte cards — you just get the one card you
-// picked, same net hand size as a normal monte draw. The paid "pacote" rule
-// only kicks in from round 2 onward.
+// Only the very FIRST discard-buy of round 1 is a freebie (no tento, no
+// bundled monte cards) — every buy after that, even still within round 1,
+// costs the normal 1 tento + 3 monte cards.
+function isDiscardBuyFree(){
+  return state.round===0 && !state.freeDiscardBuyUsed;
+}
 function canBuyFromDiscard(playerIdx){
   if(state.discardPile.length===0) return false;
-  if(state.round===0) return true;
+  if(isDiscardBuyFree()) return true;
   return state.players[playerIdx].tentosLeft > 0;
 }
 function drawFromDiscardWithPenalty(playerIdx){
   const p = state.players[playerIdx];
   if(!canBuyFromDiscard(playerIdx)) return false;
-  const isFree = state.round===0;
+  const isFree = isDiscardBuyFree();
+  if(isFree) state.freeDiscardBuyUsed = true;
   const chosen = state.discardPile.pop();
   p.hand.push(chosen);
   const gainedIds = [chosen.id];
@@ -1161,14 +1212,37 @@ function meldChipHTML(meld, idxInOwner, clickable){
     + '</div>';
 }
 
+// Visual-only mini "hand" of face-down cards standing in for an opponent's
+// real count — capped at a handful so it stays readable, with the actual
+// live number on the badge. Top seat lays them in a straight row (no fan/
+// arc); side seats stack them vertically (rotated via CSS to lie along the
+// table edge).
+function miniHandHTML(count, vertical){
+  const n = Math.min(count, 6);
+  let html = '';
+  let lastOffset = 0;
+  for(let i=0;i<n;i++){
+    const offset = i * (vertical ? 15 : 13);
+    lastOffset = offset;
+    html += '<div class="mini-card" style="' + (vertical ? 'top' : 'left') + ':' + offset + 'px;"></div>';
+  }
+  // Anchor the badge to the last rendered card instead of the container's
+  // fixed box, or it floats disconnected below a hand with only a few cards.
+  const badgePos = vertical
+    ? 'top:' + (lastOffset + (n>0?20:0)) + 'px; right:-9px;'
+    : 'left:' + (lastOffset + (n>0?14:0)) + 'px; top:-6px;';
+  html += '<div class="count-pill" style="' + badgePos + '">' + count + '</div>';
+  return html;
+}
+
 function renderSeats(){
+  const vertical = {1:true, 2:false, 3:true};
   for(let i=1;i<=3;i++){
     const p = state.players[i];
     const meta = PLAYER_META[i];
     const avatarEl = document.getElementById('avatar-'+i);
     avatarEl.textContent = p.name[0];
     avatarEl.style.background = meta.accent;
-    avatarEl.dataset.count = p.hand.length;
     document.getElementById('name-'+i).textContent = p.name;
     document.getElementById('status-'+i).textContent =
       (state.phase==='bot-turn' && state.turn===i) ? 'pensando…' :
@@ -1176,6 +1250,7 @@ function renderSeats(){
     const seatEl = document.getElementById('seat-'+i);
     seatEl.classList.toggle('active', state.turn===i && state.phase!=='round-over');
     seatEl.classList.toggle('has-melds', p.melds.length>0);
+    document.getElementById('mini-'+i).innerHTML = miniHandHTML(p.hand.length, vertical[i]);
   }
 }
 
@@ -1201,8 +1276,8 @@ function renderCenter(){
   const myTentos = state.players[0].tentosLeft;
   if(!humanCanDraw || state.discardPile.length===0){
     hint.textContent = '';
-  } else if(state.round===0){
-    hint.textContent = 'Grátis nesta 1ª rodada — sem cartas extras';
+  } else if(isDiscardBuyFree()){
+    hint.textContent = 'Grátis (1ª compra da rodada) — sem cartas extras';
   } else if(myTentos>0){
     hint.textContent = '1 tento (' + myTentos + '/' + TENTOS_BUDGET + ') + 3 do monte';
   } else {
@@ -1447,7 +1522,7 @@ function showRules(){
     '<h2>Regras — Fuck Fuck</h2>'
     + '<p>Cada jogador recebe 12 cartas. Em cada uma das 6 rodadas existe um jogo obrigatório — grupos de cartas do <b>mesmo número</b> (trinca, quadra, quina), exceto a última rodada, que pede uma <b>canastra</b> (sequência de 7 cartas do mesmo naipe). Curinga substitui qualquer carta. O jogo precisa ser descido por inteiro, de uma vez. Depois de descer, você pode encaixar cartas em jogos na mesa (seus ou dos outros) ou baixar jogos extras (3+ cartas do mesmo número, ou outra sequência de 7) para se livrar da mão mais rápido.</p>'
     + '<ul class="modal-list">'+rows+'</ul>'
-    + '<p><b>Como comprar:</b> na sua vez, escolha entre o Monte fechado (1 carta grátis e aleatória) ou o Descarte (você escolhe a carta, mas gasta <b>1 ficha de tento</b> e é obrigado a puxar mais <b>3 cartas aleatórias</b> do monte — 4 cartas ao todo). Depois, descarte só 1 carta — sua mão cresce em 3 cartas líquidas. Na <b>1ª rodada</b> a compra do descarte é uma exceção: é <b>grátis</b> e não vem com cartas extras do monte, valendo como uma compra normal. Cada jogador começa a partida com <b>'+TENTOS_BUDGET+' fichas de tento</b> para gastar a partir da 2ª rodada — elas não se renovam, e sem fichas só dá pra comprar do monte fechado. Não existe compra fora da vez: só quem está jogando pode comprar do descarte.</p>'
+    + '<p><b>Como comprar:</b> na sua vez, escolha entre o Monte fechado (1 carta grátis e aleatória) ou o Descarte (você escolhe a carta, mas gasta <b>1 ficha de tento</b> e é obrigado a puxar mais <b>3 cartas aleatórias</b> do monte — 4 cartas ao todo). Depois, descarte só 1 carta — sua mão cresce em 3 cartas líquidas. Na <b>1ª rodada</b>, a <b>primeira</b> compra do descarte da rodada é uma exceção: é <b>grátis</b> e não vem com cartas extras do monte. Da segunda compra em diante — mesmo ainda na 1ª rodada — volta a regra normal. Cada jogador começa a partida com <b>'+TENTOS_BUDGET+' fichas de tento</b> para gastar — elas não se renovam, e sem fichas só dá pra comprar do monte fechado. Não existe compra fora da vez: só quem está jogando pode comprar do descarte.</p>'
     + '<p>Depois de descer, você pode encaixar cartas em jogos abertos na mesa — de qualquer jogador que também já tenha descido — desde que sejam compatíveis: outro 8 numa trinca 8-8-8 vira quadra, e num canastra 4♥-10♥ dá pra encaixar o 3♥ antes ou o J♥ depois. Só é permitido encaixar depois que você mesmo já desceu.</p>'
     + '<p>A rodada termina quando alguém fica sem cartas (bate) e recebe 0 pontos na rodada, não importa quantas cartas tenha comprado antes. Os demais somam os <b>tentos</b> das cartas que sobraram na mão: 2 a 10 valem o próprio número, J/Q/K valem 10, Ás vale 15, e Curinga vale 20. Depois das 6 rodadas, vence quem tiver <span class="rank1">menos tentos</span>.</p>'
     + '<div class="modal-actions"><button class="act-btn primary" id="btnCloseRules">Entendi</button></div>'
@@ -1465,10 +1540,10 @@ const TUTORIAL_STEPS = [
   { title:'Sua mão', selector:'#handFan',
     body:'Suas 12 cartas ficam aqui embaixo. Clique em uma carta para selecioná-la (ela sobe e fica com um contorno dourado) — é assim que você escolhe cartas para descer, encaixar ou descartar. Você também pode arrastar as cartas para reorganizá-las do seu jeito, a qualquer momento — a ordem fica salva até o fim da rodada.' },
   { title:'Comprar uma carta', selector:'.piles',
-    body:'Na sua vez, o Monte fechado dá 1 carta grátis e aleatória. Já o Descarte deixa você escolher a carta, mas gasta 1 ficha de tento e vem "no pacote": você recebe também 3 cartas aleatórias do monte — 4 cartas de uma vez. Na 1ª rodada essa compra é grátis e sem cartas extras, como um mimo de boas-vindas. A partir da 2ª rodada você tem apenas '+TENTOS_BUDGET+' fichas para o resto da partida, e elas não voltam — use com cuidado. As cartas novas ganham uma etiqueta branca na sua mão.' },
+    body:'Na sua vez, o Monte fechado dá 1 carta grátis e aleatória. Já o Descarte deixa você escolher a carta, mas gasta 1 ficha de tento e vem "no pacote": você recebe também 3 cartas aleatórias do monte — 4 cartas de uma vez. A primeiríssima vez que você (ou qualquer um) compra do descarte na 1ª rodada é grátis e sem cartas extras, como um mimo de boas-vindas — só essa vez. Depois disso você tem apenas '+TENTOS_BUDGET+' fichas para o resto da partida, e elas não voltam — use com cuidado. As cartas novas ganham uma etiqueta branca na sua mão.' },
   { title:'Descer o jogo', selector:'#btnBaixar',
     body:'Depois de comprar, se suas cartas selecionadas formarem exatamente o jogo da rodada (mostrado no topo da mesa), clique aqui para descê-lo. Não sabe montar? Use o botão "Sugerir descida" ao lado, que procura a combinação por você.' },
-  { title:'Encaixar ou baixar jogo extra', selector:'.opponents-strip',
+  { title:'Encaixar ou baixar jogo extra', selector:'.table-wrap',
     body:'Depois de descer, toque no avatar de um adversário (ou no botão "🃏 jogos" perto da sua mão) para ver os jogos dele e encaixar uma carta: escolha o jogo e as cartas da sua mão que servem ali ficam destacadas em verde — é só tocar numa delas. Ou selecione 3+ cartas do mesmo número (ou outros 7 em sequência) e clique em "Baixar jogo extra" para começar um jogo novo.' },
   { title:'Descartar', selector:'#btnDescartar',
     body:'Para terminar seu turno, selecione 1 carta e clique em "Descartar carta" — só 1 carta, mesmo que sua mão tenha crescido comprando do descarte. Quem ficar sem cartas primeiro vence a rodada na hora (bateu).' },
@@ -1553,11 +1628,11 @@ document.getElementById('discardPile').addEventListener('click', (e)=>{
   if(!(isHumanTurn() && state.phase==='await-draw')) return;
   if(state.discardPile.length===0) return;
   if(!canBuyFromDiscard(0)){ toast('Você não tem mais tentos — só pode comprar do monte fechado.'); return; }
-  const isFree = state.round===0;
+  const isFree = isDiscardBuyFree();
   const top = state.discardPile[state.discardPile.length-1];
   const label = cardLabel(top);
   drawFromDiscardWithPenalty(0);
-  toast(isFree ? 'Comprou ' + label + ' do descarte — grátis nesta 1ª rodada!' : 'Comprou ' + label + ' + 3 do monte — gastou 1 tento.');
+  toast(isFree ? 'Comprou ' + label + ' do descarte — grátis (1ª compra da rodada)!' : 'Comprou ' + label + ' + 3 do monte — gastou 1 tento.');
   state.phase = 'await-action';
   render();
 });
