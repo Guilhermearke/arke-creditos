@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arke × MeeBoss — Planos e Calculadora de Créditos</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #07101d;
+    --bg2: #0c1a2e;
+    --bg3: #101f35;
+    --border: #1c2f4a;
+    --blue: #0059ff;
+    --blue-light: #6fa0ff;
+    --teal: #35e0e6;
+    --text: #e8efff;
+    --muted: #8a9cbf;
+    --dim: #465a7a;
+    --over: #ff6b6b;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  /* ── Header ── */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(7,16,29,.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+  }
+  .logo img, .logo svg { display: block; }
+  .logo-arke { height: 20px; width: auto; }
+  .logo-sep {
+    width: 1px; height: 20px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .logo-meeboss { height: 22px; width: auto; }
+  .header-note { font-size: 13px; color: var(--muted); }
+
+  /* ── Layout ── */
+  main { max-width: 900px; margin: 0 auto; padding: 80px 24px 120px; }
+  section { margin-bottom: 80px; }
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .section-title {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -.03em;
+    margin-bottom: 12px;
+  }
+  .section-sub {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 560px;
+    margin-bottom: 40px;
+  }
+
+  /* ── Plans ── */
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 640px) { .plans-grid { grid-template-columns: 1fr; } }
+  .plan-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    position: relative;
+    transition: border-color .2s;
+  }
+  .plan-card:hover { border-color: rgba(0,89,255,.4); }
+  .plan-card.featured {
+    border-color: var(--blue);
+    background: linear-gradient(145deg, #0c1f3f, #0d2045);
+  }
+  .plan-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--blue-light);
+    background: rgba(0,89,255,.15);
+    border: 1px solid rgba(0,89,255,.35);
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin-bottom: 16px;
+  }
+  .plan-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    letter-spacing: -.02em;
+  }
+  .plan-credits {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .plan-credits b {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -.04em;
+    color: var(--text);
+  }
+  .plan-credits span {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+  .plan-price .cur { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .plan-price b {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -.04em;
+    color: var(--blue-light);
+  }
+  .plan-price small { font-size: 13px; color: var(--muted); }
+  .plan-sep { border: none; border-top: 1px solid var(--border); margin-bottom: 20px; }
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .plan-features li {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .plan-features li::before {
+    content: '✓';
+    color: var(--teal);
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .plans-note {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--dim);
+    text-align: center;
+  }
+
+  /* ── Calculator ── */
+  #calculadora { scroll-margin-top: 80px; }
+  .cc-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 720px) { .cc-layout { grid-template-columns: 1fr; } }
+
+  .cc-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .cc-menu-head {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cc-menu-head strong { font-size: 14px; font-weight: 600; }
+  .cc-menu-head span { font-size: 11px; color: var(--dim); }
+
+  .cc-table-wrap { overflow-x: auto; }
+  .cc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .cc-table thead th {
+    padding: 10px 14px;
+    background: var(--bg3);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .cc-table thead th:nth-child(2),
+  .cc-table thead th:nth-child(3),
+  .cc-table thead th:nth-child(4) { text-align: center; }
+  .cc-table tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(28,47,74,.5);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .cc-table tbody td:nth-child(2),
+  .cc-table tbody td:nth-child(4) {
+    text-align: center;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .cc-table tbody td:nth-child(3) { text-align: center; }
+  .cc-table tr.cc-group td {
+    padding: 8px 14px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+  .cc-table input[type=number] {
+    width: 56px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 7px;
+    color: var(--text);
+    font-size: 13px;
+    text-align: center;
+    font-family: inherit;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .cc-table input[type=number]::-webkit-inner-spin-button,
+  .cc-table input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .cc-table input[type=number]:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(0,89,255,.2);
+  }
+  .cc-unit { font-size: 11px; color: var(--dim); }
+  .cc-menu-foot {
+    padding: 12px 16px;
+    font-size: 11px;
+    color: var(--dim);
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Side panel ── */
+  .cc-side { position: sticky; top: 72px; display: flex; flex-direction: column; gap: 0; }
+  .cc-side-inner { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+  .cc-plan-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .cc-plan-wrap label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  #cc-plan {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23465a7a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  #cc-plan:focus { border-color: var(--blue); }
+
+  .cc-usage { display: flex; flex-direction: column; gap: 10px; }
+  .cc-usage-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .cc-usage-top span { font-size: 12px; color: var(--muted); }
+  .cc-usage-top strong { font-size: 24px; font-weight: 700; letter-spacing: -.04em; }
+
+  .cc-meter {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  #cc-meter-fill {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--teal);
+    border-radius: 3px;
+    transition: width .3s, background .3s;
+  }
+  #cc-meter-fill.over { background: var(--over); }
+
+  .cc-summary {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 8px;
+    align-items: baseline;
+  }
+  .cc-summary span { font-size: 12px; color: var(--muted); }
+  .cc-summary strong { font-size: 14px; font-weight: 600; text-align: right; }
+  .cc-summary .cc-val-over { color: var(--over); }
+
+  .cc-actions { display: flex; gap: 8px; }
+  .cc-btn {
+    flex: 1;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .cc-btn-primary { background: var(--blue); color: #fff; }
+  .cc-btn-primary:hover { background: #004fe0; }
+  .cc-btn-secondary { background: var(--bg3); color: var(--muted); border: 1px solid var(--border); }
+  .cc-btn-secondary:hover { color: var(--text); }
+
+  .cc-note {
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.5;
+  }
+
+  details.cc-terms summary {
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+  }
+  details.cc-terms summary::before { content: '+ '; color: var(--dim); }
+  details.cc-terms[open] summary::before { content: '− '; }
+  details.cc-terms p {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.6;
+  }
+
+  /* ── Footer ── */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: 32px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .site-footer a { color: var(--muted); text-decoration: none; }
+  .site-footer a:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="#">
+    <img class="logo-arke" src="assets/images/arke-wordmark.svg" alt="Arke" onerror="this.style.display='none'">
+    <div class="logo-sep"></div>
+    <img class="logo-meeboss" src="assets/images/meeboss-logo.svg" alt="MeeBoss" onerror="this.style.display='none'">
+  </a>
+  <span class="header-note">Parceria criativa</span>
+</header>
+
+<main>
+
+  <!-- ── Plans ── -->
+  <section id="planos">
+    <p class="section-label">Assinatura mensal</p>
+    <h1 class="section-title">Escolha o seu ritmo.</h1>
+    <p class="section-sub">Créditos mensais para design, motion e edição de vídeo — com o mesmo time criativo em todos os planos.</p>
+
+    <div class="plans-grid">
+      <!-- Essential -->
+      <div class="plan-card">
+        <div class="plan-name">Keep Essential</div>
+        <div class="plan-credits">
+          <b>250</b>
+          <span>créditos / mês</span>
+        </div>
+        <div class="plan-price">
+          <span class="cur">US$</span>
+          <b>2.000</b>
+          <small>/ mês</small>
+        </div>
+        <hr class="plan-sep">
+        <ul class="plan-features">
+          <li>Design gráfico, motion e vídeo</li>
+          <li>2 rodadas de revisão por entrega</li>
+          <li>Reunião mensal de 60 min</li>
+          <li>Atendimento assíncrono por texto</li>
+          <li>Cancelamento com 30 dias de aviso</li>
+        </ul>
+      </div>
+
+      <!-- Scale (featured) -->
+      <div class="plan-card featured">
+        <div class="plan-badge">Plano em destaque</div>
+        <div class="plan-name">Keep Scale</div>
+        <div class="plan-credits">
+          <b>550</b>
+          <span>créditos / mês</span>
+        </div>
+        <div class="plan-price">
+          <span class="cur">US$</span>
+          <b>4.000</b>
+          <small>/ mês</small>
+        </div>
+        <hr class="plan-sep">
+        <ul class="plan-features">
+          <li>Design gráfico, motion e vídeo</li>
+          <li>2 rodadas de revisão por entrega</li>
+          <li>Reunião mensal de 60 min</li>
+          <li>Atendimento assíncrono por texto</li>
+          <li>Cancelamento com 30 dias de aviso</li>
+        </ul>
+      </div>
+
+      <!-- Boost -->
+      <div class="plan-card">
+        <div class="plan-name">Keep Boost</div>
+        <div class="plan-credits">
+          <b>1.000</b>
+          <span>créditos / mês</span>
+        </div>
+        <div class="plan-price">
+          <span class="cur">US$</span>
+          <b>6.500</b>
+          <small>/ mês</small>
+        </div>
+        <hr class="plan-sep">
+        <ul class="plan-features">
+          <li>Design gráfico, motion e vídeo</li>
+          <li>2 rodadas de revisão por entrega</li>
+          <li>Reunião mensal de 60 min</li>
+          <li>Atendimento assíncrono por texto</li>
+          <li>Cancelamento com 30 dias de aviso</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="plans-note">Créditos extras: US$&nbsp;9 cada · Revisão adicional: +20% dos créditos da entrega · Pagamento mensal antecipado em USD</p>
+  </section>
+
+  <!-- ── Calculator ── -->
+  <section id="calculadora">
+    <p class="section-label">Calculadora de créditos</p>
+    <h2 class="section-title">Monte o seu mês.</h2>
+    <p class="section-sub">Adicione as entregas que precisar e veja quantos créditos cada uma consome. O saldo atualiza em tempo real.</p>
+
+    <div class="cc-layout" id="creditCalculator">
+      <!-- Table -->
+      <div class="cc-panel cc-menu">
+        <div class="cc-menu-head">
+          <strong>Entregas</strong>
+          <span>16 formatos</span>
+        </div>
+        <div class="cc-table-wrap">
+          <table class="cc-table">
+            <thead>
+              <tr>
+                <th>Entrega</th>
+                <th>Créditos</th>
+                <th>Qtd.</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="cc-group"><td colspan="4">Design</td></tr>
+              <tr data-cc-item="static" data-unit="8">
+                <td>Criativo estático / thumbnail</td>
+                <td>8</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Criativo estático / thumbnail"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="variation" data-unit="2">
+                <td>Variação simples</td>
+                <td>2</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Variação simples"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="carousel" data-unit="20">
+                <td>Carrossel · até 10 páginas</td>
+                <td>20</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Carrossel · até 10 páginas"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="page" data-unit="2">
+                <td>Página extra de carrossel · 11–20</td>
+                <td>2</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Página extra de carrossel · 11–20"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+
+              <tr class="cc-group"><td colspan="4">Editorial</td></tr>
+              <tr data-cc-item="slide" data-unit="4">
+                <td>Slide de apresentação</td>
+                <td>4 <span class="cc-unit">/ pág.</span></td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Slide de apresentação"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="ebook" data-unit="4">
+                <td>Diagramação de ebook</td>
+                <td>4 <span class="cc-unit">/ pág.</span></td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Diagramação de ebook"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="print" data-unit="16">
+                <td>Peça impressa simples</td>
+                <td>16</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Peça impressa simples"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+
+              <tr class="cc-group"><td colspan="4">Edição de vídeo</td></tr>
+              <tr data-cc-item="video30" data-unit="18">
+                <td>Edição de vídeo · até 30s</td>
+                <td>18</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Edição de vídeo · até 30s"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="video60" data-unit="25">
+                <td>Edição de vídeo · até 60s</td>
+                <td>25</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Edição de vídeo · até 60s"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="video120" data-unit="35">
+                <td>Edição de vídeo · até 2min</td>
+                <td>35</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Edição de vídeo · até 2min"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="video300" data-unit="50">
+                <td>Edição de vídeo · até 5min</td>
+                <td>50</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Edição de vídeo · até 5min"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="video600" data-unit="75">
+                <td>Edição de vídeo · até 10min</td>
+                <td>75</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Edição de vídeo · até 10min"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+
+              <tr class="cc-group"><td colspan="4">Motion</td></tr>
+              <tr data-cc-item="motion30" data-unit="50">
+                <td>Motion simples · até 30s</td>
+                <td>50</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Motion simples · até 30s"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="motion60" data-unit="85">
+                <td>Motion simples · até 60s</td>
+                <td>85</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Motion simples · até 60s"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="brand30" data-unit="110">
+                <td>Motion de marca · até 30s</td>
+                <td>110</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Motion de marca · até 30s"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+              <tr data-cc-item="brand60" data-unit="140">
+                <td>Motion de marca · até 60s</td>
+                <td>140</td>
+                <td><input type="number" inputmode="numeric" min="0" max="10000" step="1" value="0" aria-label="Motion de marca · até 60s"></td>
+                <td data-cc-subtotal>0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="cc-menu-foot">Páginas extras exigem carrossel base (máx. 10 por carrossel).</div>
+      </div>
+
+      <!-- Side -->
+      <div class="cc-panel cc-side">
+        <div class="cc-side-inner">
+          <div class="cc-plan-wrap">
+            <label for="cc-plan">Plano</label>
+            <select id="cc-plan">
+              <option value="essential">Keep Essential · 250 créditos</option>
+              <option value="scale" selected>Keep Scale · 550 créditos</option>
+              <option value="boost">Keep Boost · 1.000 créditos</option>
+            </select>
+          </div>
+
+          <div class="cc-usage">
+            <div class="cc-usage-top">
+              <span>Créditos usados</span>
+              <strong id="cc-used">0</strong>
+            </div>
+            <div class="cc-meter"><i id="cc-meter-fill"></i></div>
+            <div class="cc-summary">
+              <span>Disponíveis</span>
+              <strong id="cc-available">550</strong>
+              <span>Acima do plano</span>
+              <strong id="cc-over" class="cc-val-over" style="display:none">0</strong>
+              <strong id="cc-over-zero" style="display:block">0</strong>
+              <span>Custo extra estimado</span>
+              <strong id="cc-estimate">US$0,00</strong>
+            </div>
+          </div>
+
+          <div class="cc-actions">
+            <button type="button" class="cc-btn cc-btn-primary" id="cc-example">Exemplo</button>
+            <button type="button" class="cc-btn cc-btn-secondary" id="cc-reset">Limpar</button>
+          </div>
+
+          <p class="cc-note">Créditos adicionais ao valor unitário do plano, sujeitos à aprovação prévia e disponibilidade.</p>
+
+          <details class="cc-terms">
+            <summary>Condições do plano</summary>
+            <p>Todos os planos incluem reunião mensal de 60 minutos. Pagamento mensal antecipado em USD. Cancelamento com aviso de 30 dias. Créditos adicionais ao valor unitário do plano, mediante aprovação prévia e disponibilidade. Rodada extra: 20% dos créditos da entrega, mediante aprovação prévia. Trabalhos complexos são orçados antes. Créditos não equivalem a horas exclusivas nem garantem agenda.</p>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  Arke Creative Studio · <a href="mailto:guilherme@arkeagencia.com.br">guilherme@arkeagencia.com.br</a>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  const root = document.getElementById('creditCalculator');
+  if (!root) return;
+
+  const plans = {
+    essential: { credits: 250, price: 2000 },
+    scale:     { credits: 550, price: 4000 },
+    boost:     { credits: 1000, price: 6500 }
+  };
+
+  const rows = Array.from(root.querySelectorAll('[data-cc-item]'));
+  const planEl = document.getElementById('cc-plan');
+  const quantities = {};
+  rows.forEach(function (row) { quantities[row.dataset.ccItem] = 0; });
+
+  function readQty(v) {
+    const n = parseInt(v, 10);
+    return (Number.isFinite(n) && n >= 0) ? n : 0;
+  }
+
+  function fmt(n) {
+    return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function render(normalizeInputs) {
+    const plan = plans[planEl.value] || plans.scale;
+    let total = 0;
+    rows.forEach(function (row) {
+      const key = row.dataset.ccItem;
+      const unit = parseInt(row.dataset.unit, 10);
+      const qty = quantities[key];
+      const sub = qty * unit;
+      total += sub;
+      const input = row.querySelector('input');
+      const subtotalCell = row.querySelector('[data-cc-subtotal]');
+      if (normalizeInputs) input.value = qty;
+      if (subtotalCell) subtotalCell.textContent = sub;
+    });
+
+    const available = plan.credits;
+    const used = Math.min(total, available);
+    const over = Math.max(0, total - available);
+    const perCredit = plan.price / plan.credits;
+    const estimate = over * perCredit;
+    const pct = Math.min(100, (total / available) * 100);
+
+    document.getElementById('cc-used').textContent = total;
+    document.getElementById('cc-available').textContent = available - used;
+    document.getElementById('cc-over').textContent = over;
+    document.getElementById('cc-over-zero').textContent = over;
+    document.getElementById('cc-over').style.display = over > 0 ? 'block' : 'none';
+    document.getElementById('cc-over-zero').style.display = over > 0 ? 'none' : 'block';
+    document.getElementById('cc-estimate').textContent = 'US$' + fmt(estimate);
+
+    const fill = document.getElementById('cc-meter-fill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('over', over > 0);
+  }
+
+  rows.forEach(function (row) {
+    const input = row.querySelector('input');
+    if (!input) return;
+    input.addEventListener('input', function () {
+      quantities[row.dataset.ccItem] = readQty(input.value);
+      render(false);
+    });
+    input.addEventListener('blur', function () {
+      input.value = quantities[row.dataset.ccItem];
+    });
+  });
+
+  planEl.addEventListener('change', function () { render(true); });
+
+  document.getElementById('cc-reset').addEventListener('click', function () {
+    rows.forEach(function (row) { quantities[row.dataset.ccItem] = 0; });
+    render(true);
+  });
+
+  document.getElementById('cc-example').addEventListener('click', function () {
+    rows.forEach(function (row) { quantities[row.dataset.ccItem] = 0; });
+    Object.assign(quantities, { static: 10, carousel: 3, video60: 4, motion30: 3, brand30: 1, slide: 10, variation: 5 });
+    planEl.value = 'scale';
+    render(true);
+  });
+
+  render(true);
+})();
+</script>
+
+</body>
+</html>
