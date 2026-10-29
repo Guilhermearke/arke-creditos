@@ -22,7 +22,8 @@
       "@/*": ["./*"],
       "@/app/*": ["./app/*"],
       "@/lib/*": ["./lib/*"],
-      "@/components/*": ["./components/*"]
+      "@/components/*": ["./components/*"],
+      "next/types.js": ["./node_modules/next/types"]
     }
   },
   "include": [
