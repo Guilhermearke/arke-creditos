@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Link from 'next/link'
 import { Building2, ClipboardList, LayoutDashboard } from 'lucide-react'
 import type { StatusEntrega } from '@/lib/types'

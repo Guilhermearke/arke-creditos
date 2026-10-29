@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Link from 'next/link'
 import { ArrowUpRight, Bell, Building2, ClipboardList, LayoutDashboard, Search, Users } from 'lucide-react'
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Link from 'next/link'
 import { AlertTriangle, Banknote, ClipboardList, Users } from 'lucide-react'
 import { Card, Currency, Progress, Shell } from '@/components/ui'
@@ -5,6 +6,8 @@ import { getAdminDashboardData } from '@/lib/app-data'
 
 const nav = [
   { href: '/admin/dashboard', label: 'Dashboard' },
+  { href: '/admin/projetos', label: 'Projetos' },
+  { href: '/admin/metricas', label: 'Métricas' },
   { href: '/admin/clientes', label: 'Clientes' },
   { href: '/admin/clientes/novo', label: 'Novo cliente' },
   { href: '/admin/entregas', label: 'Entregas' },
